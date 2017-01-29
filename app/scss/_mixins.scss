@@ -1,0 +1,56 @@
+/*************************************************/
+/*-------------------- MIXINS -------------------*/
+/*************************************************/
+
+@mixin border-radius($radius) {
+  -webkit-border-radius: $radius;
+     -moz-border-radius: $radius;
+       -o-border-radius: $radius;
+          border-radius: $radius;
+}
+
+@mixin box-shadow ($x, $y, $blur, $spread, $color, $direction: false) {
+  @if ($direction != false) { 
+    -webkit-box-shadow: $x $y $blur $spread $color inset;
+       -moz-box-shadow: $x $y $blur $spread $color inset;
+         -o-box-shadow: $x $y $blur $spread $color inset;
+            box-shadow: $x $y $blur $spread $color inset;
+  } @else {
+    -webkit-box-shadow: $x $y $blur $spread $color;
+       -moz-box-shadow: $x $y $blur $spread $color;
+         -o-box-shadow: $x $y $blur $spread $color;
+            box-shadow: $x $y $blur $spread $color;
+  }
+}
+
+@mixin transform-translate($x, $y) {
+  -webkit-transform: translate($x, $y);
+     -moz-transform: translate($x, $y);
+       -o-transform: translate($x, $y);
+          transform: translate($x, $y);
+}
+
+@mixin transform-rotate($deg) {
+  -webkit-transform: rotate($deg); /* Chrome, Safari, Opera */
+      -ms-transform: rotate($deg); /* IE 9 */
+          transform: rotate($deg);
+}
+
+@mixin background-degrade1($first, $second) {
+  background-image: -webkit-linear-gradient(left, $first 0%, $second 50%, $first 100%);
+  background-image:    -moz-linear-gradient(left, $first 0%, $second 50%, $first 100%);
+  background-image:         linear-gradient(to right, $first 0%, $second 50%, $first 100%);
+}
+@mixin background-degrade2($first, $second) {
+	background-image: -webkit-linear-gradient(top, $first 0%, $second 100%);
+	background-image:    -moz-linear-gradient(top, $first 0%, $second 100%);
+	background-image:         linear-gradient(to bottom, $first 0%, $second 100%);
+}
+
+@mixin blur($var) {
+  filter: blur($var);
+      -webkit-filter: blur($var);
+      -moz-filter: blur($var);
+      -o-filter: blur($var);
+      -ms-filter: blur($var);
+}

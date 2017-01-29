@@ -1,0 +1,35 @@
+/* Fichier Style CSS */
+
+/* Font-face */
+@font-face {
+	font-family: 'FontAwesome';
+    src: url('../fonts/FontAwesome.eot');
+    src: url('../fonts/FontAwesome.eot?#iefix') format('embedded-opentype'),
+         url('../fonts/FontAwesome.woff') format('woff'),
+         url('../fonts/FontAwesome.ttf') format('truetype'),
+         url('../fonts/FontAwesome.svg#PolicePerso') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Balises globales */
+
+body, h1, h2, h3, h4, h5, ul, p, input, select, textarea, button {
+	margin: 0;
+	padding: 0;
+	font-weight: normal;
+    outline: none;
+}
+
+body {
+    font-family: "Verdana", "Arial";
+    font-size: 14px;
+    margin: auto;
+    padding-top: 60px;
+}
+
+img {
+    display: inline-block;
+    max-width: 100%;
+    height: auto;
+}
