@@ -3,4 +3,33 @@ header {
 	top: 0;
 	height: 50px;
 	width: 100%;
+	z-index: 1000;
+	background-color: $vert-clair;
+
+	nav.navbar-default {
+		background-color: transparent;
+		border: none;
+
+		.navbar-nav {
+			li {
+				a {
+					color: $blanc;
+				}
+			}
+		}
+		.navbar-toggle {
+			border: none;
+
+			.icon-bar {
+				background-color: $blanc;
+			}
+			&:hover, &:focus {
+				background-color: $blanc;
+
+				.icon-bar {
+					background-color: $vert-clair;
+				}
+			}
+		}
+	}
 }

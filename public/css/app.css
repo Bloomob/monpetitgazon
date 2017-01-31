@@ -33,10 +33,55 @@ header {
   position: fixed;
   top: 0;
   height: 50px;
-  width: 100%; }
+  width: 100%;
+  z-index: 1000;
+  background-color: #45C945; }
+  header nav.navbar-default {
+    background-color: transparent;
+    border: none; }
+    header nav.navbar-default .navbar-nav li a {
+      color: #ffffff; }
+    header nav.navbar-default .navbar-toggle {
+      border: none; }
+      header nav.navbar-default .navbar-toggle .icon-bar {
+        background-color: #ffffff; }
+      header nav.navbar-default .navbar-toggle:hover, header nav.navbar-default .navbar-toggle:focus {
+        background-color: #ffffff; }
+        header nav.navbar-default .navbar-toggle:hover .icon-bar, header nav.navbar-default .navbar-toggle:focus .icon-bar {
+          background-color: #45C945; }
 
 .classement-ligue {
   width: 100%; }
+
+textarea {
+  width: 100%; }
+
+td.perf-top {
+  background-color: #029f50; }
+
+td.perf-good {
+  background-color: #79a73b; }
+
+td.perf-normal {
+  background-color: #f0af25; }
+
+td.perf-bad {
+  background-color: #f87d15; }
+
+td.perf-awful {
+  background-color: #ff4b04; }
+
+th .fa-circle {
+  color: #029f50; }
+
+th .fa-circle-thin {
+  color: #ff4b04; }
+
+td .fa-caret-right {
+  color: #000000;
+  padding-left: 5px;
+  font-size: 16px; }
+
 
 
 /*# sourceMappingURL=app.css.map*/

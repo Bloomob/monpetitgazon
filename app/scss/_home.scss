@@ -1,3 +1,39 @@
 .classement-ligue {
 	width: 100%;
 }
+textarea {
+	width: 100%;
+}
+
+td {
+	&.perf-top {
+		background-color: $vert;
+	}
+	&.perf-good {
+		background-color: mix($vert, $orange);
+	}
+	&.perf-normal {
+		background-color: $orange;
+	}
+	&.perf-bad {
+		background-color: mix($orange, $rouge);
+	}
+	&.perf-awful {
+		background-color: $rouge;
+	}
+}
+th {
+	.fa-circle {
+		color: $vert;
+	}
+	.fa-circle-thin {
+		color: $rouge;
+	}
+}
+td {
+	.fa-caret-right {
+		color: $noir;
+		padding-left: 5px;
+		font-size: 16px;
+	}
+}
