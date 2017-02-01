@@ -289,7 +289,8 @@ $(function () {
                 moyenne,
                 noteClass,
                 notes,
-                k;
+                k,
+                position;
 
             function compare(e) {
                 return e.id === j;
@@ -319,13 +320,22 @@ $(function () {
                                 equipe = eq_home;
                             }
 
+                            if(joueurs[j].info.position == 'Goalkeeper')
+                                position = postes[1];
+                            else if(joueurs[j].info.position == 'Defender')
+                                position = postes[2];
+                            else if(joueurs[j].info.position == 'Midfielder')
+                                position = postes[3];
+                            else if(joueurs[j].info.position == 'Striker')
+                                position = postes[4];
+
                             if(joueurs[j].info.sub) {
-                                var titu = 1;
-                                var sub = 0;
-                            }    
-                            else {
                                 var titu = 0;
                                 var sub = 1;
+                            }    
+                            else {
+                                var titu = 1;
+                                var sub = 0;
                             }
 
                             if (result.length === 0) {
@@ -333,6 +343,7 @@ $(function () {
                                 joueur = {
                                     id: j,
                                     nom: joueurs[j].info.lastname,
+                                    position: position,
                                     equipe: equipe,
                                     somme: joueurs[j].info.note_final_2015,
                                     buts: joueurs[j].info.goals,
@@ -413,15 +424,18 @@ $(function () {
 
             $ligne_head = $('<tr/>').append(
                 $('<th/>').attr('data-sortable', true).attr('data-field', 'joueur').text('Joueur'),
+                $('<th/>').attr('data-sortable', true).attr('data-field', 'position').text('Pos.'),
                 $('<th/>').attr('data-sortable', true).attr('data-field', 'equipe').text('Equipe'),
-                $('<th/>').attr('data-sortable', true).attr('data-field', 'buts').text('Buts'),
+                $('<th/>').attr('data-sortable', true).attr('data-field', 'buts').append(
+                    $('<i/>').addClass('fa fa-futbol-o').attr('aria-hidden', true)
+                ),
                 $('<th/>').attr('data-sortable', true).attr('data-field', 'titulaires').append(
                     $('<i/>').addClass('fa fa-circle').attr('aria-hidden', true)
                 ),
                 $('<th/>').attr('data-sortable', true).attr('data-field', 'remplacants').append(
                     $('<i/>').addClass('fa fa-circle-thin').attr('aria-hidden', true)
                 ),
-                $('<th/>').attr('data-sortable', true).attr('data-field', 'moyenne').text('Moyenne')
+                $('<th/>').attr('data-sortable', true).attr('data-field', 'moyenne').text('Moy.')
             );
 
             for (i = 0; i < liste_journees.length; i += 1) {
@@ -433,6 +447,7 @@ $(function () {
                 if (liste_notes.hasOwnProperty(i)) {
                     $ligne = $('<tr/>').append(
                         $('<td/>').html('<strong>' + liste_notes[i].nom + '</strong>'),
+                        $('<td/>').text(liste_notes[i].position),
                         $('<td/>').text(liste_notes[i].equipe),
                         $('<td/>').text(liste_notes[i].buts),
                         $('<td/>').text(liste_notes[i].titulaires),
