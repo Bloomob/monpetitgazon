@@ -58,7 +58,10 @@
 			echo json_encode($stats);
 		}
 		elseif($page == 'ligue1' || $page == 'premierleague') {
-			echo json_encode($arr[$page]);
+			echo json_encode($arr);
 		}
+        elseif($page == 'resultats') {
+            echo json_encode($arr);
+        }
 	}
 ?>
