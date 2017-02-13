@@ -50,8 +50,36 @@ header {
         header nav.navbar-default .navbar-toggle:hover .icon-bar, header nav.navbar-default .navbar-toggle:focus .icon-bar {
           background-color: #45C945; }
 
-.classement-ligue {
-  width: 100%; }
+.classement tbody tr:nth-child(1) {
+  background-color: rgba(2, 159, 80, 0.5); }
+
+.classement tbody tr:nth-child(2) {
+  background-color: rgba(2, 159, 80, 0.3); }
+
+.classement tbody tr:nth-child(3) {
+  background-color: rgba(2, 159, 80, 0.1); }
+
+.classement tbody tr:nth-last-child(1) {
+  background-color: rgba(255, 75, 4, 0.5); }
+
+.classement tbody tr:nth-last-child(2) {
+  background-color: rgba(255, 75, 4, 0.3); }
+
+.classement tbody tr:nth-last-child(3) {
+  background-color: rgba(255, 75, 4, 0.1); }
+
+.classement tbody td.serie span {
+  display: inline-block;
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  margin-right: 5px; }
+  .classement tbody td.serie span.d {
+    background-color: #ff0000; }
+  .classement tbody td.serie span.n {
+    background-color: #f0af25; }
+  .classement tbody td.serie span.v {
+    background-color: #228f60; }
 
 textarea {
   width: 100%; }

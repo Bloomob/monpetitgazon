@@ -1,5 +1,43 @@
-.classement-ligue {
-	width: 100%;
+.classement {
+    tbody {
+        tr:nth-child(1) {
+            background-color: rgba($vert, 0.5);
+        }
+        tr:nth-child(2) {
+            background-color: rgba($vert, 0.3);
+        }
+        tr:nth-child(3) {
+            background-color: rgba($vert, 0.1);
+        }
+        tr:nth-last-child(1) {
+            background-color: rgba($rouge, 0.5);
+        }
+        tr:nth-last-child(2) {
+            background-color: rgba($rouge, 0.3);
+        }
+        tr:nth-last-child(3) {
+            background-color: rgba($rouge, 0.1);
+        }
+        td.serie {
+            span {
+                display: inline-block;
+                border-radius: 50%;
+                width: 10px;
+                height: 10px;
+                margin-right: 5px;
+                
+                &.d {
+                    background-color: $rouge2;
+                }
+                &.n {
+                    background-color: $orange;
+                }
+                &.v {
+                    background-color: $vert2;
+                }
+            }
+        }
+    }
 }
 textarea {
 	width: 100%;

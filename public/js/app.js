@@ -158,9 +158,9 @@ $(function () {
         'Défenseur',
         'Milieu',
         'Attaquant'
-    ];
-    
-    var teams = [];
+    ],
+        teams = [],
+        $page = $('.page');
 
     /* Fonctions globales */
     
@@ -179,17 +179,70 @@ $(function () {
             }
         });
     }
+    
+    function getHome() {
+        $page.append(
+            $('<div/>').addClass('row').append(
+                $('<div/>').addClass('col-sm-6 col-sm-offset-3').append(
+                    $('<form/>').append(
+                        $('<div/>').addClass('form-group').append(
+                            $('<label/>').attr('for', 'emailInput').text('Entrez votre Email MPG :'),
+                            $('<input/>').addClass('form-control').attr('type', 'email').attr('placeholder', 'ex : test@mail.fr').attr('id', 'emailInput')
+                        ),
+                        $('<div/>').addClass('form-group').append(
+                            $('<label/>').attr('for', 'passwordInput').text('Entrez votre mot de passe MPG :'),
+                            $('<input/>').addClass('form-control').attr('type', 'password').attr('placeholder', 'Saissisez votre mote de passe MPG').attr('id', 'passwordInput')
+                        ),
+                        $('<button/>').addClass('btn btn-primary seconnecter').attr('type', 'submit').text('Se connecter')
+                    )
+                )
+            )
+        );
+        $('.seconnecter').click(function(e){
+            e.preventDefault();
+            seConnecter($('#emailInput').val(), $('#passwordInput').val());
+        });
+    }
+    
+    function seConnecter(email, password) {
+        $page.find('alert alert-danger').remove();
+        $.post({
+            url: "https://api.monpetitgazon.com/user/signIn",
+            data: {
+                email: email,
+                password: password,
+                language: "fr-FR"
+            },
+            dataType: 'json'
+        }).done(function(data) {
+            console.log(data);
+            Cookies.set('token', data.token, { expires: 7 });
+            // $page.append(data); 
+        }).fail(function(data) {
+            $page.find('form').before(
+                $('<div/>').addClass('alert alert-danger').attr('role', 'alert').text('Erreur utilisateur / mot de passe incorrect')
+            );
+        });
+    }
+    
+    function getTransferts() {
+        $.get({
+            url: "https://api.monpetitgazon.com/league/pVArFY4W1nn/transfer/buy",
+            headers: {"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Im1wZ191c2VyXzE2NDIxNSIsImlhdCI6MTQ3MzEwMDE5OH0.jDpqaHDWADpxFD6ToFAAwPrXGOWCMlkO3YQjTagejxQ"}
+        }).done(function(data) {
+            console.log(data);
+        });
+    }
 
     function getResultats() {
         console.log('getResultats');
-         $.ajax({
+        $.ajax({
             url: "ajax/liste.php",
             method: "POST",
             dataType : 'json',
             data: { page: 'resultats' }
         }).done(function (data) {
-            var $page = $('.page'),
-                resultats = data.resultats,
+            var resultats = data.resultats,
                 ligue1 = data.ligue1,
                 journee,
                 eq_home,
@@ -583,21 +636,22 @@ $(function () {
     }
 
     function getClassement() {
-        $.ajax({
-            url: "ajax/liste.php",
-            method: "POST",
-            dataType : 'json',
-            data: { page: 'classement' }
-        }).done(function (data) {
+        $.get({
+            url: "https://api.monpetitgazon.com/league/pVArFY4W1nn/ranking",
+            headers: { "Authorization": Cookies.get('token') }
+        }).done(function(data) {
             var classement = data.ranking,
                 clubs = data.teams,
                 $tableau,
                 i,
+                j,
+                s,
                 donnees,
                 $ligne,
+                serie,
                 equipe;
 
-            $tableau = $('<table/>').addClass('table').append(
+            $tableau = $('<table/>').addClass('table classement').append(
                 $('<thead/>').append(
                     $('<tr/>').append(
                         $('<th/>'),
@@ -615,6 +669,7 @@ $(function () {
                 ),
                 $('<tbody/>')
             );
+            
             for (i = 0; i < classement.length; i += 1) {
                 donnees = classement[i];
                 $ligne = $('<tr/>');
@@ -625,6 +680,14 @@ $(function () {
                             $ligne.append($('<td/>').text(clubs[donnees[equipe]].name));
                         } else if (equipe === 'rank') {
                             $ligne.prepend($('<td/>').text(donnees[equipe]));
+                        }  else if (equipe === 'series') {
+                            $ligne.append($('<td/>').addClass('serie'));
+                            serie = donnees[equipe].split("");
+                            
+                            for(s in serie) {
+                                $ligne.find('.serie').append($('<span/>').addClass(serie[s]));
+                            }
+                            
                         } else {
                             $ligne.append($('<td/>').text(donnees[equipe]));
                         }
@@ -632,17 +695,16 @@ $(function () {
                 }
                 $tableau.append($ligne);
             }
-            $('.page').append($tableau);
+            $page.append($tableau);
+            $tableau.bootstrapTable();
         });
     }
 
     function getEffectifs() {
-        $.ajax({
-            url: "ajax/liste.php",
-            method: "POST",
-            dataType : 'json',
-            data: { page: 'effectif' }
-        }).done(function (data) {
+        $.get({
+            url: "https://api.monpetitgazon.com/league/pVArFY4W1nn/teams",
+            headers: { "Authorization": Cookies.get('token') }
+        }).done(function (data){
             var clubs = data.teamsid,
                 effectifs = data.teams,
                 i,
@@ -693,7 +755,7 @@ $(function () {
 
                     for (i = 0; i < tab_joueurs.length; i += 1) {
                         $ligne = $('<tr/>').attr('data-idplayer', tab_joueurs[i].id).append(
-                            $('<td/>').html(tab_joueurs[i].firstname + ' ' + tab_joueurs[i].lastname),
+                            $('<td/>').html((tab_joueurs[i].firstname) ? tab_joueurs[i].firstname + ' ' + tab_joueurs[i].lastname : '' + tab_joueurs[i].lastname),
                             $('<td/>').text(postes[tab_joueurs[i].position]),
                             $('<td/>').text(tab_joueurs[i].club),
                             $('<td/>').text(tab_joueurs[i].price_paid),
@@ -713,15 +775,48 @@ $(function () {
     }
 
     function getLigue1() {
-        $.ajax({
+        var journee = 0,
+            tab = [],
+            j;
+        
+        function listeMatchParJournee (i) {
+            $.get({
+                url: "https://api.monpetitgazon.com/championship/1/calendar/?day=" + i,
+                headers: { "Authorization": Cookies.get('token') },
+                async: false
+            }).done(function (data){
+                tab.push(data);
+            });
+        }
+        
+        $.get({
+            url: "https://api.monpetitgazon.com/championship/1/calendar/",
+            headers: { "Authorization": Cookies.get('token') }
+        }).done(function (data){
+            journee = data.day;
+        }).always(function (){            
+            for(j = 1; j <= journee; j+=1) {
+                listeMatchParJournee(j);
+            }
+            console.log(tab);
+        });
+        
+        /*$.get({
+            url: "https://api.monpetitgazon.com/championship/1/calendar/",
+            headers: { "Authorization": Cookies.get('token') }
+        }).done(function (data){
+            
+        }).always(function (){
+            
+        });*/
+        
+        /*$.ajax({
             url: "ajax/liste.php",
             method: "POST",
             dataType : 'json',
             data: { page: 'ligue1' }
         }).done(function (data) {
-            
-            console.log(data);
-            
+                        
             var matchs = data["ligue1"],
                 effectifs = data["effectifs.json"],
                 liste_notes = [],
@@ -1010,7 +1105,13 @@ $(function () {
                     location.reload();
                 });
             });
-        });
+        });*/
+    }
+    
+    function get404() {
+        $page.append(
+            $('<h1/>').text('La page demandée n\'existe pas !')
+        )
     }
 
 
@@ -1019,11 +1120,13 @@ $(function () {
             tab = path.split('?')[1].split('&'),
             page = tab[0];
 
-        $('.page.' + page).removeClass('hidden');
-
         getTeams();
-        if (page === 'classement') {
+        if (page === 'home') {
+            getHome();
+        } else if (page === 'classement') {
             getClassement();
+        } else if (page === 'transferts') {
+            getTransferts();
         } else if (page === 'resultats') {
             getResultats();
         } else if (page === 'statistiques') {
@@ -1034,6 +1137,8 @@ $(function () {
             getMatch();
         } else if (page === 'ligue1') {
             getLigue1();
+        } else {
+            get404();
         }
         // getHome();
     }
