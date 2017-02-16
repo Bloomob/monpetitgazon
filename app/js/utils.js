@@ -25,7 +25,12 @@ function getTeams() {
     });
 }
 
+function fontAwesomeIcon(nom) {
+    return $('<i/>').addClass('fa fa-' + nom).attr('aria-hidden', 'true');
+}
+
 module.exports = {
     postes: postes,
-    getTeams: getTeams
+    getTeams: getTeams,
+    fontAwesomeIcon: fontAwesomeIcon
 }

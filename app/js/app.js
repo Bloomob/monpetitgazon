@@ -9,6 +9,7 @@ var utils = require('js/utils'),
     classement = require('js/classement'),
     effectifs = require('js/effectifs'),
     ligue1 = require('js/ligue1'),
+    match = require('js/match'),
 
     /* Variables gloables */
     teams = [],
@@ -37,10 +38,6 @@ function seConnecter(email, password) {
     });
 }
 
-function getMatch() {
-    
-}
-
 function get404() {
     $page.append(
         $('<h1/>').text('La page demandée n\'existe pas !')
@@ -50,7 +47,8 @@ function get404() {
 function loadPage() {
     var path = window.location.search,
         tab = path.split('?')[1].split('&'),
-        page = tab[0];
+        page = tab[0],
+        id = tab[1];
 
     utils.getTeams();
     if (page === 'home') {
@@ -68,7 +66,7 @@ function loadPage() {
     } else if (page === 'equipes') {
         effectifs.getEffectifs();
     } else if (page === 'match') {
-        getMatch();
+        match.getMatch(id);
     } else if (page === 'ligue1') {
         ligue1.getLigue1();
     } else {

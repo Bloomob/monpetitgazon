@@ -163,43 +163,6 @@ function getLigue1() {
                 }
 
                 $('.page').append(
-                    $('<div/>').addClass('actions').append(
-                        $('<button/>').addClass('btn btn-success').attr('type', 'button').attr('data-toggle', 'modal').attr('data-target', '#addMatch').text('Ajouter un match'),
-                        $('<div/>').addClass('modal fade').attr('id', 'addMatch').attr('role', 'dialog').attr('aria-labelledby', 'addMatch').append(
-                            $('<div/>').addClass('modal-dialog').attr('role', 'document').append(
-                                $('<div/>').addClass('modal-content').append(
-                                    $('<div/>').addClass('modal-header').append(
-                                        $('<button/>').attr('type', 'button').addClass('close').attr('data-dismiss', 'modal').attr('aria-label', 'Close').append(
-                                            $('<span/>').attr('aria-hidden', 'true').html('&times;')
-                                        ),
-                                        $('<h4/>').addClass('modal-title').attr('id', 'addMatch').text('Ajouter un match - Format JSON')
-                                    ),
-                                    $('<div/>').addClass('modal-body').append(
-                                        $('<form/>').append(
-                                            $('<div/>').addClass('row').append(
-                                                $('<div/>').addClass('col-sm-6').append(
-                                                    $('<select/>').addClass('selectpicker').append(
-                                                        $('<option/>').val('ligue1').text('Ligue 1'),
-                                                        $('<option/>').val('premierleague').text('Premier League')
-                                                    )
-                                                ),
-                                                $('<div/>').addClass('col-sm-6').append(
-                                                    $('<input/>').attr('type', 'number').attr('placeholder', '0')
-                                                ),
-                                                $('<div/>').addClass('col-sm-12').append(
-                                                    $('<textarea/>').attr('placeholder', 'Ajouter le fichier json du match ici')
-                                                )
-                                            )
-                                        )
-                                    ),
-                                    $('<div/>').addClass('modal-footer').append(
-                                        $('<button/>').attr('type', 'button').addClass('btn btn-default').attr('data-dismiss', 'modal').text('Annuler'),
-                                        $('<button/>').attr('type', 'button').addClass('btn btn-primary btn-add-match').text('Enregistrer')
-                                    )
-                                )
-                            )
-                        )
-                    ),
                     $('<table/>').addClass('table').attr('data-sort-name', 'joueur').attr('data-toggle', 'table').append(
                         $('<thead/>'),
                         $('<tbody/>')

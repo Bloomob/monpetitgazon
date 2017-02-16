@@ -40,7 +40,8 @@ header {
     background-color: transparent;
     border: none; }
     header nav.navbar-default .navbar-nav li a {
-      color: #ffffff; }
+      color: #ffffff;
+      padding: 15px 10px; }
     header nav.navbar-default .navbar-toggle {
       border: none; }
       header nav.navbar-default .navbar-toggle .icon-bar {
@@ -109,6 +110,25 @@ td .fa-caret-right {
   color: #000000;
   padding-left: 5px;
   font-size: 16px; }
+
+.listeJournees {
+  margin-bottom: 25px;
+  text-align: center; }
+  .listeJournees ul {
+    display: inline-block;
+    background-color: #029f50;
+    list-style: none;
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
+    -o-border-radius: 8px;
+    border-radius: 8px;
+    padding: 5px;
+    text-align: center; }
+    .listeJournees ul li {
+      display: inline-block; }
+      .listeJournees ul li a {
+        padding: 10px;
+        color: #ffffff; }
 
 
 
