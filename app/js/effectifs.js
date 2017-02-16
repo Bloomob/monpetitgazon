@@ -1,6 +1,7 @@
 "use strict";
 
-var $page = $('.page');
+var utils = require('js/utils'),
+    $page = $('.page');
 
 function getEffectifs() {
     $.get({
@@ -58,7 +59,7 @@ function getEffectifs() {
                 for (i = 0; i < tab_joueurs.length; i += 1) {
                     $ligne = $('<tr/>').attr('data-idplayer', tab_joueurs[i].id).append(
                         $('<td/>').html((tab_joueurs[i].firstname) ? tab_joueurs[i].firstname + ' ' + tab_joueurs[i].lastname : '' + tab_joueurs[i].lastname),
-                        $('<td/>').text(postes[tab_joueurs[i].position]),
+                        $('<td/>').text(utils.postes[tab_joueurs[i].position]),
                         $('<td/>').text(tab_joueurs[i].club),
                         $('<td/>').text(tab_joueurs[i].price_paid),
                         $('<td/>').attr('data-teamid', effectifs[effectif].id).text(equipe_joueurs)

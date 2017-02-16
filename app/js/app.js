@@ -1,6 +1,7 @@
 "use strict";
 
-var home = require('js/home'),
+var utils = require('js/utils'),
+    home = require('js/home'),
     resultats = require('js/resultats'),
     transferts = require('js/transferts'),
     live = require('js/live'),
@@ -10,33 +11,10 @@ var home = require('js/home'),
     ligue1 = require('js/ligue1'),
 
     /* Variables gloables */
-    postes = [
-        'Aucun',
-        'Gardien',
-        'Défenseur',
-        'Milieu',
-        'Attaquant'
-    ],
     teams = [],
     $page = $('.page');
 
 /* Fonctions globales */
-
-function getTeams() {
-    $.ajax({
-        url: "ajax/liste.php",
-        method: "POST",
-        dataType : 'json',
-        data: { page: 'effectif' }
-    }).done(function (data) {
-        var clubs = data.teamsid,
-            i;
-        
-        for (i = 0; i < clubs.length; i += 1) {
-            teams.push(clubs[i].name);
-        }
-    });
-}
 
 function seConnecter(email, password) {
     $page.find('alert alert-danger').remove();
@@ -74,7 +52,7 @@ function loadPage() {
         tab = path.split('?')[1].split('&'),
         page = tab[0];
 
-    getTeams();
+    utils.getTeams();
     if (page === 'home') {
         home.getHome();
     } else if (page === 'classement') {
