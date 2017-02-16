@@ -29,8 +29,23 @@ function fontAwesomeIcon(nom) {
     return $('<i/>').addClass('fa fa-' + nom).attr('aria-hidden', 'true');
 }
 
+function classNote (note) {
+    if (note >= 7) {
+        return 'perf-top';
+    } else if (note >= 6) {
+        return 'perf-good';
+    } else if (note >= 5) {
+        return 'perf-normal';
+    } else if (note >= 4) {
+        return 'perf-bad';
+    } else {
+        return 'perf-awful';
+    }
+}
+
 module.exports = {
     postes: postes,
     getTeams: getTeams,
-    fontAwesomeIcon: fontAwesomeIcon
+    fontAwesomeIcon: fontAwesomeIcon,
+    classNote: classNote
 }

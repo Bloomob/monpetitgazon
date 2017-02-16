@@ -22,12 +22,16 @@ body {
   font-family: "Verdana", "Arial";
   font-size: 14px;
   margin: auto;
-  padding-top: 60px; }
+  padding-top: 60px;
+  color: #333333; }
 
 img {
   display: inline-block;
   max-width: 100%;
   height: auto; }
+
+a {
+  color: #333333; }
 
 header {
   position: fixed;
@@ -85,28 +89,28 @@ header {
 textarea {
   width: 100%; }
 
-td.perf-top {
+.ligue1 td.perf-top {
   background-color: #029f50; }
 
-td.perf-good {
+.ligue1 td.perf-good {
   background-color: #79a73b; }
 
-td.perf-normal {
+.ligue1 td.perf-normal {
   background-color: #f0af25; }
 
-td.perf-bad {
+.ligue1 td.perf-bad {
   background-color: #f87d15; }
 
-td.perf-awful {
+.ligue1 td.perf-awful {
   background-color: #ff4b04; }
 
-th .fa-circle {
+.ligue1 th .fa-circle {
   color: #029f50; }
 
-th .fa-circle-thin {
+.ligue1 th .fa-circle-thin {
   color: #ff4b04; }
 
-td .fa-caret-right {
+.ligue1 td .fa-caret-right {
   color: #000000;
   padding-left: 5px;
   font-size: 16px; }
@@ -129,6 +133,58 @@ td .fa-caret-right {
       .listeJournees ul li a {
         padding: 10px;
         color: #ffffff; }
+
+.header-match {
+  margin: 25px 0; }
+  .header-match .equipe {
+    font-size: 20px;
+    line-height: 54px; }
+  .header-match .score {
+    background-color: #42464d;
+    color: #ffffff;
+    padding: 5px 15px;
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
+    -o-border-radius: 8px;
+    border-radius: 8px;
+    font-size: 36px; }
+  .header-match .buteur .fa {
+    margin-left: 5px; }
+    .header-match .buteur .fa + .fa {
+      margin-left: 1px; }
+    .header-match .buteur .fa.mpg {
+      color: #029f50; }
+    .header-match .buteur .fa.cancel_goal {
+      color: #ff4b04; }
+    .header-match .buteur .fa.ownl_goal {
+      color: #f0af25; }
+  .header-match .buteursHome .buteur .fa {
+    margin-left: 0;
+    margin-right: 1px; }
+    .header-match .buteursHome .buteur .fa:last-child {
+      margin-right: 5px; }
+
+.content-match .table td.numero, .content-match .table td.note, .content-match .table td.bonus, .content-match .table td.total-note {
+  text-align: center; }
+
+.content-match .table td.numero .out {
+  color: #ff4b04; }
+
+.content-match .table td.numero .in {
+  color: #029f50; }
+
+.content-match .table td.note {
+  font-weight: bold; }
+  .content-match .table td.note.perf-top {
+    color: #029f50; }
+  .content-match .table td.note.perf-good {
+    color: #79a73b; }
+  .content-match .table td.note.perf-normal {
+    color: #f0af25; }
+  .content-match .table td.note.perf-bad {
+    color: #f87d15; }
+  .content-match .table td.note.perf-awful {
+    color: #ff4b04; }
 
 
 

@@ -43,37 +43,39 @@ textarea {
 	width: 100%;
 }
 
-td {
-	&.perf-top {
-		background-color: $vert;
-	}
-	&.perf-good {
-		background-color: mix($vert, $orange);
-	}
-	&.perf-normal {
-		background-color: $orange;
-	}
-	&.perf-bad {
-		background-color: mix($orange, $rouge);
-	}
-	&.perf-awful {
-		background-color: $rouge;
-	}
-}
-th {
-	.fa-circle {
-		color: $vert;
-	}
-	.fa-circle-thin {
-		color: $rouge;
-	}
-}
-td {
-	.fa-caret-right {
-		color: $noir;
-		padding-left: 5px;
-		font-size: 16px;
-	}
+.ligue1 {
+    td {
+        &.perf-top {
+            background-color: $vert;
+        }
+        &.perf-good {
+            background-color: mix($vert, $orange);
+        }
+        &.perf-normal {
+            background-color: $orange;
+        }
+        &.perf-bad {
+            background-color: mix($orange, $rouge);
+        }
+        &.perf-awful {
+            background-color: $rouge;
+        }
+    }
+    th {
+        .fa-circle {
+            color: $vert;
+        }
+        .fa-circle-thin {
+            color: $rouge;
+        }
+    }
+    td {
+        .fa-caret-right {
+            color: $noir;
+            padding-left: 5px;
+            font-size: 16px;
+        }
+    }
 }
 
 // Page résultats
@@ -96,6 +98,91 @@ td {
             a {
                 padding: 10px;
                 color: $blanc;
+            }
+        }
+    }
+}
+
+// Page matchs
+
+.header-match {
+    margin: 25px 0;
+    
+    .equipe {
+        font-size: 20px;
+        line-height: 54px;
+    }
+    .score {
+        background-color: $gris-fonce;
+        color: $blanc;
+        padding: 5px 15px;
+        @include border-radius(8px);
+        font-size: 36px;
+    }
+    .buteur {
+        .fa {
+            margin-left: 5px;
+            
+            + .fa {
+                margin-left: 1px;
+            }
+            &.mpg {
+                color: $vert;
+            }
+            &.cancel_goal {
+                color: $rouge;
+            }
+            &.ownl_goal {
+                color: $orange;
+            }
+        }
+    }
+    .buteursHome {
+        .buteur {
+            .fa {
+                margin-left: 0;
+                margin-right: 1px;
+                
+                &:last-child {
+                    margin-right: 5px;
+                }
+            }
+        }
+    }
+}
+
+.content-match {
+    .table {
+        td {
+            &.numero, &.note, &.bonus, &.total-note {
+                text-align: center;
+            }
+            &.numero {
+                .out {
+                    color: $rouge;
+                }
+                .in {
+                    color: $vert;
+                }
+            }
+            &.note {
+                font-weight: bold;
+                
+                &.perf-top {
+                    color: $vert;
+                }
+                &.perf-good {
+                    color: mix($vert, $orange);
+                }
+                &.perf-normal {
+                    color: $orange;
+                }
+                &.perf-bad {
+                    color: mix($orange, $rouge);
+                }
+                &.perf-awful {
+                    color: $rouge;
+                }
             }
         }
     }

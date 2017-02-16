@@ -163,7 +163,7 @@ function getLigue1() {
                 }
 
                 $('.page').append(
-                    $('<table/>').addClass('table').attr('data-sort-name', 'joueur').attr('data-toggle', 'table').append(
+                    $('<table/>').addClass('table ligue1').attr('data-sort-name', 'joueur').attr('data-toggle', 'table').append(
                         $('<thead/>'),
                         $('<tbody/>')
                     )

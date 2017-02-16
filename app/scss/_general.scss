@@ -26,10 +26,15 @@ body {
     font-size: 14px;
     margin: auto;
     padding-top: 60px;
+    color: $noir2;
 }
 
 img {
     display: inline-block;
     max-width: 100%;
     height: auto;
+}
+
+a {
+    color: $noir2;
 }
