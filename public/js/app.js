@@ -494,6 +494,145 @@ function getLigue1() {
         return e.id === j;
     }
 
+    function trouverEquipe (myArray, value) {
+         for (var i in myArray) {
+            for (var j in myArray[i].players) {
+                if (myArray[i].players[j].id === 'player_' + value) {
+                    return { nom: myArray[i].name, poste: myArray[i].players[j].position };
+                }
+            }
+        }
+     }
+
+    function loadMatchsParJournee(derniereJournee, effectifs) {
+        for(i = 18; i <= derniereJournee; i += 1) {
+            tabPromessesMatchParJournee.push(i);
+        }
+        listePromessesMatchParJournee = tabPromessesMatchParJournee.map(getListeMatchParJournee);
+    }
+
+    function loadLiguePage(listeNotes, effectifs) {
+        $('.page').append(
+            $('<table/>').addClass('table ligue1').attr('data-sort-name', 'joueur').attr('data-toggle', 'table').append(
+                $('<thead/>'),
+                $('<tbody/>')
+            )
+        );
+
+        $ligneHead = $('<tr/>').append(
+            $('<th/>').attr('data-sortable', true).attr('data-field', 'joueur').text('Joueur'),
+            $('<th/>').attr('data-sortable', true).attr('data-field', 'position').text('Position'),
+            $('<th/>').attr('data-sortable', true).attr('data-field', 'proprietaire').text('Propriétaire'),
+            $('<th/>').attr('data-sortable', true).attr('data-field', 'equipe').text('Equipe'),
+            $('<th/>').attr('data-sortable', true).attr('data-field', 'buts').append(
+                $('<i/>').addClass('fa fa-futbol-o').attr('aria-hidden', true)
+            ),
+            $('<th/>').attr('data-sortable', true).attr('data-field', 'titulaires').append(
+                $('<i/>').addClass('fa fa-circle').attr('aria-hidden', true)
+            ),
+            $('<th/>').attr('data-sortable', true).attr('data-field', 'remplacants').append(
+                $('<i/>').addClass('fa fa-circle-thin').attr('aria-hidden', true)
+            ),
+            $('<th/>').attr('data-sortable', true).attr('data-field', 'moyenne').text('Moy.')
+        );
+
+        for (i = 0; i < listeJournees.length; i += 1) {
+            $ligneHead.append($('<th/>').attr('data-sortable', true).attr('data-field', 'J' + listeJournees[i]).text('J' + listeJournees[i]));
+        }
+        $('.page table thead').append($ligneHead);
+
+        // console.log(effectifs.teams, liste_notes);
+
+        for (i in listeNotes) {
+            if (listeNotes.hasOwnProperty(i)) {
+                $ligne = $('<tr/>').append(
+                    $('<td/>').html('<strong>' + listeNotes[i].nom + '</strong>'),
+                    $('<td/>').text(trouverEquipe(effectifs.teams, listeNotes[i].id) !== undefined ? utils.postes[(trouverEquipe(effectifs.teams, listeNotes[i].id))['poste']] : ''),
+                    $('<td/>').text(trouverEquipe(effectifs.teams, listeNotes[i].id) !== undefined ? (trouverEquipe(effectifs.teams, listeNotes[i].id))['nom'] : 'Libre'),
+                    $('<td/>').text(listeNotes[i].equipe),
+                    $('<td/>').text(listeNotes[i].buts),
+                    $('<td/>').text(listeNotes[i].titulaires),
+                    $('<td/>').text(listeNotes[i].remplacants)
+                );
+                notes = listeNotes[i].notes;
+
+                moyenne = Math.round(listeNotes[i].somme / notes.length * 100) / 100;
+
+                if (moyenne >= 7) {
+                    noteClass = 'perf-top';
+                } else if (moyenne >= 6) {
+                    noteClass = 'perf-good';
+                } else if (moyenne >= 5) {
+                    noteClass = 'perf-normal';
+                } else if (moyenne >= 4) {
+                    noteClass = 'perf-bad';
+                } else if (moyenne < 4) {
+                    noteClass = 'perf-awful';
+                }
+
+                $ligne.append($('<td/>').addClass(noteClass).text(moyenne));
+                k = 0;
+                for (j = 0; j < listeJournees.length; j += 1) {
+                    if (notes[k] !== undefined) {
+                        if (listeJournees[j] === notes[k].journee) {
+                            if (notes[k].note >= 7) {
+                                noteClass = 'perf-top';
+                            } else if (notes[k].note >= 6) {
+                                noteClass = 'perf-good';
+                            } else if (notes[k].note >= 5) {
+                                noteClass = 'perf-normal';
+                            } else if (notes[k].note >= 4) {
+                                noteClass = 'perf-bad';
+                            } else if (notes[k].note < 4) {
+                                noteClass = 'perf-awful';
+                            }
+
+                            if (notes[k].sub) {
+                                $ligne.append($('<td/>').addClass(noteClass).append(
+                                    $('<span/>').text(notes[k].note),
+                                    $('<i/>').addClass('fa fa-caret-right').attr('aria-hidden', true)
+                                ));
+                            } else {
+                                $ligne.append($('<td/>').addClass(noteClass).text(notes[k].note));
+                            }
+                            k += 1;
+                        } else {
+                            $ligne.append($('<td/>').text('X'));
+                        }
+                    } else {
+                        $ligne.append($('<td/>').text('X'));
+                        k += 1;
+                    }
+                }
+                $('.page table tbody').append($ligne);
+            }
+        }
+
+        $('.page .modal .selectpicker').selectpicker('refresh');
+        $('.page table').bootstrapTable({
+            pagination: true,
+            search: true,
+            showColumns: true
+        });
+    }
+
+    /*
+    if(utils.getStorage('derniereJournee') != null && utils.getStorage('effectifs') != null) {
+        loadMatchsParJournee(utils.getStorage('derniereJournee').value, utils.getStorage('effectifs').value);
+    } else {
+        $.when(getDerniereJournee(), getEffectif()).then(function(args1, args2){
+            derniereJournee = args1[0].day;
+            effectifs = args2[0];
+            utils.setStorage('derniereJournee', derniereJournee);
+            utils.setStorage('effectifs', effectifs);
+
+            loadMatchsParJournee(derniereJournee, effectifs);
+
+            // loadLiguePage(listeNotes, effectifs);
+        });
+    }
+    */
+
     $.when(getDerniereJournee(), getEffectif()).then(function(args1, args2){
         derniereJournee = args1[0].day;
         effectifs = args2[0];
@@ -594,18 +733,7 @@ function getLigue1() {
                     )
                 );
 
-                function trouverEquipe (myArray, value) {
-                     // console.log(myArray, value);
-                     for (var i in myArray) {
-                        // console.log(myArray[i]);
-                        for (var j in myArray[i].players) {
-                            // console.log(myArray[i].players[j].id, value);
-                            if (myArray[i].players[j].id === 'player_' + value) {
-                                return { nom: myArray[i].name, poste: myArray[i].players[j].position };
-                            }
-                        }
-                    }
-                 }
+                
 
                 $ligneHead = $('<tr/>').append(
                     $('<th/>').attr('data-sortable', true).attr('data-field', 'joueur').text('Joueur'),
@@ -701,29 +829,6 @@ function getLigue1() {
                     pagination: true,
                     search: true,
                     showColumns: true
-                });
-                $('.page .modal .btn-add-match').on('click', function (e) {
-                    e.preventDefault();
-
-                    var ligue = $('.page form .selectpicker').val();
-                    var journee = $('.page form input').val();
-                    var json = $('.page form textarea').val();
-
-                    $.ajax({
-                        url: "ajax/ajout_match.php",
-                        method: "POST",
-                        data: {
-                            ligue: ligue,
-                            journee: journee,
-                            json: json
-                        }
-                    }).done(function (data) {
-                        console.log(data);
-                        $('.page form input').val('');
-                        $('.page form textarea').val('');
-                        $('.page .modal').modal('hide');
-                        location.reload();
-                    });
                 });
             });
         });
@@ -1062,6 +1167,7 @@ var utils = require('js/utils'),
     teamHome,
     teamAway,
     buts,
+    remplacant,
     $tabHome,
     $tabAway,
     $icons,
@@ -1089,7 +1195,7 @@ function getMatch(id) {
         };
     }
 
-    $.when(getMatchParId(id).fail(erreurPromesse())).then(function(args){
+    function loadMatchPage(args) {
         // console.log(args.data);
         bonus = args.data.bonus;
         players = args.data.players;
@@ -1099,14 +1205,32 @@ function getMatch(id) {
         $page.append(
             $('<div/>').addClass('header-match').append(
                 $('<div/>').addClass('row').append(
-                    $('<div/>').addClass('col-sm-5 text-right').append(
-                        $('<span/>').addClass('equipe').text(teamHome.name)
+                    $('<div/>').addClass('col-sm-4 col-md-5 text-right').append(
+                        $('<div/>').addClass('row').append(
+                            $('<div/>').addClass('col-xs-9 col-sm-12').append(
+                                $('<div/>').addClass('equipe').append(
+                                    $('<span/>').text(teamHome.name)
+                                )
+                            ),
+                            $('<div/>').addClass('visible-xs col-xs-3').append(
+                                $('<div/>').addClass('score').text(teamHome.score)
+                            )
+                        )
                     ),
-                    $('<div/>').addClass('col-sm-2 text-center').append(
-                        $('<span/>').addClass('score').text(teamHome.score + ' - ' + teamAway.score)
+                    $('<div/>').addClass('hidden-xs col-sm-4 col-md-2 text-center').append(
+                        $('<div/>').addClass('score').text(teamHome.score + ' - ' + teamAway.score)
                     ),
-                    $('<div/>').addClass('col-sm-5').append(
-                        $('<span/>').addClass('equipe').text(teamAway.name)
+                    $('<div/>').addClass('col-sm-4 col-md-5').append(
+                        $('<div/>').addClass('row').append(
+                            $('<div/>').addClass('col-xs-9 col-sm-12').append(
+                                $('<div/>').addClass('equipe').append(
+                                    $('<span/>').text(teamAway.name)
+                                )
+                            ),
+                            $('<div/>').addClass('visible-xs col-xs-3').append(
+                                $('<div/>').addClass('score').text(teamAway.score)
+                            )
+                        )
                     )
                 ),
                 $('<div/>').addClass('row').append(
@@ -1117,11 +1241,10 @@ function getMatch(id) {
             $('<div/>').addClass('content-match')
         );
         
-        console.log(args.data);
-        
         $tabHome = $('<table/>').addClass('table').append(
             $('<tr/>').append(
                 $('<th/>').addClass('numero').text('Num'),
+                $('<th/>').addClass('remplacement').text(''),
                 $('<th/>').addClass('nom').text('Nom'),
                 $('<th/>').addClass('note').text('Note'),
                 $('<th/>').addClass('bonus').text('Bonus'),
@@ -1133,10 +1256,10 @@ function getMatch(id) {
         
         $page.find('.content-match').append(
             $('<div/>').addClass('row').append(
-                $('<div/>').addClass('col-sm-5').append(
+                $('<div/>').addClass('col-sm-6').append(
                     $tabHome
                 ),
-                $('<div/>').addClass('col-sm-5 col-sm-offset-2').append(
+                $('<div/>').addClass('col-sm-6').append(
                     $tabAway
                 )
             )
@@ -1151,20 +1274,59 @@ function getMatch(id) {
                     for(k = 1; k <= buts[j]; k++) {
                         $icons.append(utils.fontAwesomeIcon('futbol-o ' + j));
                     }
-                    $page.find('.buteursHome').append(
-                        $('<div/>').addClass('buteur text-right').append( $icons, players.home[i].name )
-                    );
+                    if(j == 'own_goal') {
+                        $page.find('.buteursAway').append(
+                            $('<div/>').addClass('buteur').append( players.home[i].name, $icons )
+                        );
+                    } else {
+                        $page.find('.buteursHome').append(
+                            $('<div/>').addClass('buteur text-right').append( $icons, players.home[i].name )
+                        );
+                    }
                 }
             }
             $tabHome.addClass('tabHome').append(
                 $('<tr/>').append(
-                    $('<td/>').addClass('numero').html( players.home[i].rating ? players.home[i].number : utils.fontAwesomeIcon('chevron-left out') ),
+                    $('<td/>').addClass('numero').text( players.home[i].number ),
+                    $('<td/>').addClass('remplacement').html( players.home[i].substitute ? utils.fontAwesomeIcon('chevron-left out') : '' ),
                     $('<td/>').addClass('nom').text( players.home[i].name ),
                     $('<td/>').addClass('note ' + utils.classNote(players.home[i].rating) ).text( players.home[i].rating ),
                     $('<td/>').addClass('bonus').text( players.home[i].rating ? players.home[i].bonus : '' ),
                     $('<td/>').addClass('total-note').text( players.home[i].rating ? players.home[i].rating + players.home[i].bonus : '' )
                 )
             )
+            if(players.home[i].substitute) {
+                remplacant = players.home[i].substitute;
+                buts = remplacant.goals;
+
+                for(j in buts) {
+                    if(buts[j] > 0) {
+                        $icons = $('<span/>').addClass('icons');
+                        for(k = 1; k <= buts[j]; k++) {
+                            $icons.append(utils.fontAwesomeIcon('futbol-o ' + j));
+                        }
+                        if(j == 'own_goal') {
+                            $page.find('.buteursAway').append(
+                                $('<div/>').addClass('buteur').append( remplacant.name, $icons )
+                            );
+                        } else {
+                            $page.find('.buteursHome').append(
+                                $('<div/>').addClass('buteur text-right').append( $icons, remplacant.name )
+                            );
+                        }
+                    }
+                }
+                $tabHome.append(
+                    $('<tr/>').append(
+                        $('<td/>').addClass('numero').text( '' ),
+                        $('<td/>').addClass('remplacement').html( utils.fontAwesomeIcon('chevron-right in') ),
+                        $('<td/>').addClass('nom').text( remplacant.name ),
+                        $('<td/>').addClass('note ' + utils.classNote(remplacant.rating) ).text( remplacant.rating ),
+                        $('<td/>').addClass('bonus').text( remplacant.rating ? remplacant.bonus : '' ),
+                        $('<td/>').addClass('total-note').text( remplacant.rating ? remplacant.rating + remplacant.bonus : '' )
+                    )
+                )
+            }
         }
                 
         for(i in players.away) {
@@ -1176,22 +1338,70 @@ function getMatch(id) {
                     for(k = 1; k <= buts[j]; k++) {
                         $icons.append(utils.fontAwesomeIcon('futbol-o ' + j));
                     }
-                    $page.find('.buteursAway').append(
-                        $('<div/>').addClass('buteur').append( players.away[i].name, $icons )
-                    );
+                    if(j != 'own_goal') {
+                        $page.find('.buteursAway').append(
+                            $('<div/>').addClass('buteur').append( players.home[i].name, $icons )
+                        );
+                    } else {
+                        $page.find('.buteursHome').append(
+                            $('<div/>').addClass('buteur text-right').append( $icons, players.home[i].name )
+                        );
+                    }
                 }
             }
             $tabAway.addClass('tabAway').append(
                 $('<tr/>').append(
-                    $('<td/>').addClass('numero').html( players.away[i].rating ? players.away[i].number : utils.fontAwesomeIcon('chevron-left out') ),
+                    $('<td/>').addClass('numero').text( players.away[i].number ),
+                    $('<td/>').addClass('remplacement').html( players.away[i].substitute ? utils.fontAwesomeIcon('chevron-left out') : '' ),
                     $('<td/>').addClass('nom').text( players.away[i].name ),
                     $('<td/>').addClass('note ' + utils.classNote(players.away[i].rating) ).text( players.away[i].rating ),
                     $('<td/>').addClass('bonus').text( players.away[i].rating ? players.away[i].bonus : '' ),
                     $('<td/>').addClass('total-note').text( players.away[i].rating ? players.away[i].rating + players.away[i].bonus : '' )
                 )
             )
+            if(players.away[i].substitute) {
+                remplacant = players.away[i].substitute;
+                buts = remplacant.goals;
+                
+                for(j in buts) {
+                    if(buts[j] > 0) {
+                        $icons = $('<span/>').addClass('icons');
+                        for(k = 1; k <= buts[j]; k++) {
+                            $icons.append(utils.fontAwesomeIcon('futbol-o ' + j));
+                        }
+                        if(j != 'own_goal') {
+                            $page.find('.buteursAway').append(
+                                $('<div/>').addClass('buteur').append( remplacant.name, $icons )
+                            );
+                        } else {
+                            $page.find('.buteursHome').append(
+                                $('<div/>').addClass('buteur text-right').append( $icons, remplacant.name )
+                            );
+                        }
+                    }
+                }
+                $tabAway.append(
+                    $('<tr/>').append(
+                        $('<td/>').addClass('numero').text( '' ),
+                        $('<td/>').addClass('remplacement').html( utils.fontAwesomeIcon('chevron-right in') ),
+                        $('<td/>').addClass('nom').text( remplacant.name ),
+                        $('<td/>').addClass('note ' + utils.classNote(remplacant.rating) ).text( remplacant.rating ),
+                        $('<td/>').addClass('bonus').text( remplacant.rating ? remplacant.bonus : '' ),
+                        $('<td/>').addClass('total-note').text( remplacant.rating ? remplacant.rating + remplacant.bonus : '' )
+                    )
+                )
+            }
         }
-    });
+    }
+
+    if(utils.getStorage('matchParId_' + id) != null) {
+        loadMatchPage(utils.getStorage('matchParId_' + id).value);
+    } else {
+        $.when(getMatchParId(id).fail(erreurPromesse())).then(function(args){
+            utils.setStorage('matchParId_' + id, args);
+            loadMatchPage(args);
+        });
+    }
 }
 
 module.exports = {
@@ -1475,11 +1685,25 @@ function classNote (note) {
     }
 }
 
+function getStorage (key) {
+    if(localStorage.getItem(key) != null) {
+        return $.parseJSON(localStorage.getItem(key));
+    } else {
+        return null;
+    }
+}
+
+function setStorage (key, value) {
+    localStorage.setItem(key, JSON.stringify({value: value}));
+}
+
 module.exports = {
     postes: postes,
     getTeams: getTeams,
     fontAwesomeIcon: fontAwesomeIcon,
-    classNote: classNote
+    classNote: classNote,
+    getStorage: getStorage,
+    setStorage: setStorage,
 }
 });
 

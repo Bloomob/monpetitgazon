@@ -43,9 +43,23 @@ function classNote (note) {
     }
 }
 
+function getStorage (key) {
+    if(localStorage.getItem(key) != null) {
+        return $.parseJSON(localStorage.getItem(key));
+    } else {
+        return null;
+    }
+}
+
+function setStorage (key, value) {
+    localStorage.setItem(key, JSON.stringify({value: value}));
+}
+
 module.exports = {
     postes: postes,
     getTeams: getTeams,
     fontAwesomeIcon: fontAwesomeIcon,
-    classNote: classNote
+    classNote: classNote,
+    getStorage: getStorage,
+    setStorage: setStorage,
 }

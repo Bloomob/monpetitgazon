@@ -109,15 +109,34 @@ textarea {
     margin: 25px 0;
     
     .equipe {
+        position: relative;
         font-size: 20px;
-        line-height: 54px;
+        height: 54px;
+
+        @media (max-width: 767px) {
+            text-align: left;
+            display: block;
+        }
+        span {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            @include transform-translate(0, -50%);
+            width: 100%;
+        }
     }
     .score {
+        display: inline-block;
         background-color: $gris-fonce;
         color: $blanc;
         padding: 5px 15px;
         @include border-radius(8px);
         font-size: 36px;
+
+        @media (max-width: 767px) {
+            float: right;
+            font-size: 24px;
+        }
     }
     .buteur {
         .fa {
@@ -153,11 +172,11 @@ textarea {
 
 .content-match {
     .table {
-        td {
-            &.numero, &.note, &.bonus, &.total-note {
+        th, td {
+            &.numero, &.remplacement, &.note, &.bonus, &.total-note {
                 text-align: center;
             }
-            &.numero {
+            &.remplacement {
                 .out {
                     color: $rouge;
                 }
