@@ -190,6 +190,10 @@ function getLigue1() {
             showColumns: true
         });
     }
+    
+    function failPromessesMatchParJournee () {
+        console.log('Une erreur est survenue');
+    }
 
     /*
     if(utils.getStorage('derniereJournee') != null && utils.getStorage('effectifs') != null) {
@@ -216,7 +220,7 @@ function getLigue1() {
             tabPromessesMatchParJournee.push(i);
         }
         listePromessesMatchParJournee = tabPromessesMatchParJournee.map(getListeMatchParJournee);
-
+        
         $.when.apply($, listePromessesMatchParJournee).then(function(){
             for(i = 0; i < tabPromessesMatchParJournee.length; ++i) {
                 journee = arguments[i][0].day;
@@ -225,7 +229,8 @@ function getLigue1() {
                 
                 for(j in matchs) {
                     if (matchs.hasOwnProperty(j)) {
-                        if(matchs[j].home.score || matchs[j].home.score !== '') {
+                        
+                        if(matchs[j].home.score !== undefined && matchs[j].home.score !== '') {
                             tabPromessesDetailsParId.push(matchs[j].id);
                             tabJournee.push(journee);
                         }
@@ -234,7 +239,7 @@ function getLigue1() {
             }
             
             listePromessesDetailsParId = tabPromessesDetailsParId.map(getDetailsMatchParId);
-
+            
             $.when.apply($, listePromessesDetailsParId).then(function(){
                 for(i = 0; i < tabPromessesDetailsParId.length; ++i) {
                     journee = tabJournee[i];
@@ -302,7 +307,7 @@ function getLigue1() {
                 }
 
                 $('.page').append(
-                    $('<table/>').addClass('table ligue1').attr('data-sort-name', 'joueur').attr('data-toggle', 'table').append(
+                    $('<table/>').addClass('table ligue1').attr('data-sort-name', 'joueur').attr('data-toggle', 'table').attr('data-filter-control', 'true').attr('data-filter-show-clear', 'true').append(
                         $('<thead/>'),
                         $('<tbody/>')
                     )
@@ -312,9 +317,9 @@ function getLigue1() {
 
                 $ligneHead = $('<tr/>').append(
                     $('<th/>').attr('data-sortable', true).attr('data-field', 'joueur').text('Joueur'),
-                    $('<th/>').attr('data-sortable', true).attr('data-field', 'position').text('Position'),
-                    $('<th/>').attr('data-sortable', true).attr('data-field', 'proprietaire').text('Propriétaire'),
-                    $('<th/>').attr('data-sortable', true).attr('data-field', 'equipe').text('Equipe'),
+                    $('<th/>').attr('data-sortable', true).attr('data-filter-control', 'select').attr('data-field', 'position').text('Position'),
+                    $('<th/>').attr('data-sortable', true).attr('data-filter-control', 'select').attr('data-field', 'proprietaire').text('Propriétaire'),
+                    $('<th/>').attr('data-sortable', true).attr('data-filter-control', 'select').attr('data-field', 'equipe').text('Equipe'),
                     $('<th/>').attr('data-sortable', true).attr('data-field', 'buts').append(
                         $('<i/>').addClass('fa fa-futbol-o').attr('aria-hidden', true)
                     ),

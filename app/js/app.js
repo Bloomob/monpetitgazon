@@ -17,27 +17,6 @@ var utils = require('js/utils'),
 
 /* Fonctions globales */
 
-function seConnecter(email, password) {
-    $page.find('alert alert-danger').remove();
-    $.post({
-        url: "https://api.monpetitgazon.com/user/signIn",
-        data: {
-            email: email,
-            password: password,
-            language: "fr-FR"
-        },
-        dataType: 'json'
-    }).done(function(data) {
-        console.log(data);
-        Cookies.set('token', data.token, { expires: 7 });
-        // $page.append(data); 
-    }).fail(function(data) {
-        $page.find('form').before(
-            $('<div/>').addClass('alert alert-danger').attr('role', 'alert').text('Erreur utilisateur / mot de passe incorrect')
-        );
-    });
-}
-
 function get404() {
     $page.append(
         $('<h1/>').text('La page demandée n\'existe pas !')
