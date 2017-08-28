@@ -134,6 +134,10 @@ textarea {
         padding: 10px;
         color: #ffffff; }
 
+.stats h3 {
+  color: #029f50;
+  margin-bottom: 10px; }
+
 .header-match {
   margin: 25px 0; }
   .header-match .equipe {
@@ -204,6 +208,10 @@ textarea {
     color: #f87d15; }
   .content-match .table th.note.perf-awful, .content-match .table td.note.perf-awful {
     color: #ff4b04; }
+
+.alert .fa {
+  margin-right: 10px;
+  font-size: 24px; }
 
 
 

@@ -25,7 +25,7 @@ function getMatch(id) {
     }
     function erreurPromesse() {
         return function(data) {
-            $page.append(
+            $page.html(
                 $('<div/>').addClass('alert alert-danger text-center').attr('role', 'alert').append(
                     utils.fontAwesomeIcon('exclamation-triangle'),
                     $('<span/>').text('Le match que vous cherchez n\'existe pas')
@@ -42,43 +42,45 @@ function getMatch(id) {
         teamHome = args.data.teamHome;
         teamAway = args.data.teamAway;
 
-        $page.append(
-            $('<div/>').addClass('header-match').append(
-                $('<div/>').addClass('row').append(
-                    $('<div/>').addClass('col-sm-4 col-md-5 text-right').append(
-                        $('<div/>').addClass('row').append(
-                            $('<div/>').addClass('col-xs-9 col-sm-12').append(
-                                $('<div/>').addClass('equipe').append(
-                                    $('<span/>').text(teamHome.name)
+        $page.html(
+            $('<div/>').append(
+                $('<div/>').addClass('header-match').append(
+                    $('<div/>').addClass('row').append(
+                        $('<div/>').addClass('col-sm-4 col-md-5 text-right').append(
+                            $('<div/>').addClass('row').append(
+                                $('<div/>').addClass('col-xs-9 col-sm-12').append(
+                                    $('<div/>').addClass('equipe').append(
+                                        $('<span/>').text(teamHome.name)
+                                    )
+                                ),
+                                $('<div/>').addClass('visible-xs col-xs-3').append(
+                                    $('<div/>').addClass('score').text(teamHome.score)
                                 )
-                            ),
-                            $('<div/>').addClass('visible-xs col-xs-3').append(
-                                $('<div/>').addClass('score').text(teamHome.score)
+                            )
+                        ),
+                        $('<div/>').addClass('hidden-xs col-sm-4 col-md-2 text-center').append(
+                            $('<div/>').addClass('score').text(teamHome.score + ' - ' + teamAway.score)
+                        ),
+                        $('<div/>').addClass('col-sm-4 col-md-5').append(
+                            $('<div/>').addClass('row').append(
+                                $('<div/>').addClass('col-xs-9 col-sm-12').append(
+                                    $('<div/>').addClass('equipe').append(
+                                        $('<span/>').text(teamAway.name)
+                                    )
+                                ),
+                                $('<div/>').addClass('visible-xs col-xs-3').append(
+                                    $('<div/>').addClass('score').text(teamAway.score)
+                                )
                             )
                         )
                     ),
-                    $('<div/>').addClass('hidden-xs col-sm-4 col-md-2 text-center').append(
-                        $('<div/>').addClass('score').text(teamHome.score + ' - ' + teamAway.score)
-                    ),
-                    $('<div/>').addClass('col-sm-4 col-md-5').append(
-                        $('<div/>').addClass('row').append(
-                            $('<div/>').addClass('col-xs-9 col-sm-12').append(
-                                $('<div/>').addClass('equipe').append(
-                                    $('<span/>').text(teamAway.name)
-                                )
-                            ),
-                            $('<div/>').addClass('visible-xs col-xs-3').append(
-                                $('<div/>').addClass('score').text(teamAway.score)
-                            )
-                        )
+                    $('<div/>').addClass('row').append(
+                        $('<div/>').addClass('col-sm-5 buteursHome'),
+                        $('<div/>').addClass('col-sm-5 col-sm-offset-2 buteursAway')
                     )
                 ),
-                $('<div/>').addClass('row').append(
-                    $('<div/>').addClass('col-sm-5 buteursHome'),
-                    $('<div/>').addClass('col-sm-5 col-sm-offset-2 buteursAway')
-                )
-            ),
-            $('<div/>').addClass('content-match')
+                $('<div/>').addClass('content-match')
+            )
         );
         
         $tabHome = $('<table/>').addClass('table').append(
@@ -180,11 +182,11 @@ function getMatch(id) {
                     }
                     if(j != 'own_goal') {
                         $page.find('.buteursAway').append(
-                            $('<div/>').addClass('buteur').append( players.home[i].name, $icons )
+                            $('<div/>').addClass('buteur').append( players.away[i].name, $icons )
                         );
                     } else {
                         $page.find('.buteursHome').append(
-                            $('<div/>').addClass('buteur text-right').append( $icons, players.home[i].name )
+                            $('<div/>').addClass('buteur text-right').append( $icons, players.away[i].name )
                         );
                     }
                 }

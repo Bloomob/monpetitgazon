@@ -40,62 +40,71 @@ function getLive() {
             headers: { "Authorization": Cookies.get('token') }
         });
     }
+
+    function loadNoLive () {
+        $page.html(
+            $('<div/>').addClass('alert alert-warning text-center').attr('role', 'alert').append(
+                utils.fontAwesomeIcon('ban text-warning'),
+                $('<span/>').text('Pas de live actuellement')
+            )
+        );
+    }
     
-    function loadMatchsLivePage (listeMatchsStorage) {
-        console.log(listeMatchsStorage);
+    function loadMatchsLivePage (listeMatchsStorage, listeEquipesLive) {
+        console.log(listeMatchsStorage, listeEquipesLive);
         
-        for(i = 0; i < listeMatchsStorage.length - 1; i+=1) {
+        for(i = 0; i < listeEquipesLive.length - 1; i+=1) {
             console.log(listeMatchsStorage[i][0]);
         }
     }
     
-    function loadLivePage (derniersResultats, listeEquipesLive) {        
-        for(i = 0; i < derniersResultats.length - 1; i += 1) {
-            if(derniersResultats[i].home.score !== undefined && derniersResultats[i].home.score !== '') {
+    function loadLivePage (derniersResultats, listeEquipesLive) {
+        console.log(derniersResultats, listeEquipesLive);
+
+        for(i = 0; i < derniersResultats.length; i += 1) {
+            if(
+                derniersResultats[i].home.score !== undefined && 
+                derniersResultats[i].home.score !== ''
+            ) {
                 tabPromesses.push(derniersResultats[i].id);
                 isStorage = utils.getStorage('match_' + derniersResultats[i].id) != null && isStorage;
-
-                if(utils.getStorage('match_' + derniersResultats[i].id) != null)
+                
+                if(isStorage)
                     listeMatchsStorage.push(utils.getStorage('match_' + derniersResultats[i].id).value);
             }
         }
         listePromesses1 = tabPromesses.map(getListeMatchs);
         
-        for(i = 0; i < listeEquipesLive.length - 1; i += 1) {
+        tabPromesses = [];
+        for(i = 0; i < listeEquipesLive.length; i += 1) {
             tabPromesses.push([listeEquipesLive[i].id, listeEquipesLive[0].home.id]);
             tabPromesses.push([listeEquipesLive[i].id, listeEquipesLive[0].away.id]);
             
             /*
-                tabPromesses.push(listeEquipesLive[i].id);
-                isStorage = utils.getStorage('match_' + derniersResultats[i].id) != null && isStorage;
+            isStorage = utils.getStorage('equipeLive_' + listeEquipesLive[i].id) != null && isStorage;
 
-                if(utils.getStorage('match_' + derniersResultats[i].id) != null)
-                    listeMatchsStorage.push(utils.getStorage('match_' + derniersResultats[i].id).value);
-            */
+            if(utils.getStorage('equipeLive_' + listeEquipesLive[i].id) != null)
+                listeEquipesStorage.push(utils.getStorage('equipeLive_' + listeEquipesLive[i].id).value);*/
         }
-        
-        listePromesses2 = tabPromesses.map(getEquipeLive);        
+        listePromesses2 = tabPromesses.map(getEquipeLive);
         listePromesses = listePromesses1.concat(listePromesses2);
-        
-        if(isStorage) {
-            loadMatchsLivePage(listeMatchsStorage);
-        } else {
-            $.when.apply($, listePromesses).then(function(){
-                
-                loadMatchsLivePage(arguments);
-            });
-        }
-    }
-    
-    if(utils.getStorage('derniersResultats') != null && utils.getStorage('listeEquipesLive') != null) {
-        loadLivePage(utils.getStorage('derniersResultats').value, utils.getStorage('listeEquipesLive').value);
-    } else {
-        $.when(getDerniersResultats(), getListeEquipesLive()).then(function(args1, args2){
-            utils.setStorage('derniersResultats', args1[0].matches);
-            utils.setStorage('listeEquipesLive', args2[0][0].matches);
-            loadLivePage(args1[0].matches, args2[0][0].matches);
+
+        $.when.apply($, listePromesses).then(function(){
+            console.log(arguments);
+            // loadMatchsLivePage(arguments);
         });
     }
+    
+    $.when(getDerniersResultats(), getListeEquipesLive()).then(function(args1, args2){
+        utils.setStorage('derniersResultats', args1[0].matches);
+
+        if(args2[0].success) {
+            loadNoLive();
+        } else {
+            utils.setStorage('listeEquipesLive', args2[0][0].matches);
+            loadLivePage(args1[0].matches, args2[0][0].matches);
+        }
+    });
 }
 
 module.exports = {

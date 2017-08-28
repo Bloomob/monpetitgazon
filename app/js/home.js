@@ -3,7 +3,7 @@
 var $page = $('.page');
 
 function getHome() {
-    $page.append(
+    $page.html(
         $('<div/>').addClass('row').append(
             $('<div/>').addClass('col-sm-6 col-sm-offset-3').append(
                 $('<form/>').append(
@@ -39,6 +39,7 @@ function seConnecter(email, password) {
     }).done(function(data) {
         console.log(data);
         Cookies.set('token', data.token, { expires: 7 });
+        window.location.href = '?classement';
         // $page.append(data); 
     }).fail(function(data) {
         $page.find('form').before(

@@ -29,6 +29,12 @@ function loadPage() {
         page = tab[0],
         id = tab[1];
 
+    $('.page').append(
+        $('<div/>').addClass('text-center text-success').append(
+            utils.fontAwesomeIcon('spinner fa-pulse fa-3x fa-fw')
+        )
+    );
+
     utils.getTeams();
     if (page === 'home') {
         home.getHome();

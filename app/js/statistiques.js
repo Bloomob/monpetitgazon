@@ -1,80 +1,170 @@
 "use strict";
 
-var $page = $('.page');
+var utils = require('js/utils'),
+    api = require('js/api'),
+    $page = $('.page'),
+    allRating = [],
+    now,
+    joueurs,
+    listeJoueurs = [],
+    prixMoyens = [0, [], [], [], []],
+    result = [],
+    stats = {},
+    effectif,
+    equipe,
+    prix,
+    prixPrec,
+    i,
+    j;
 
-function getStatistiques() {
+function loadPageStatistiques(equipes, budgets, cotes) { 
+    console.log(cotes);
+    
+    for(i in equipes) {
+        joueurs = equipes[i].players;
 
-    var allRating = [];
-
-    $.ajax({
-        url: "ajax/liste.php",
-        method: "POST",
-        dataType : 'json',
-        data: { page: 'statistiques' }
-    }).done(function (data) {
-        // console.log(data);
-
-        $('.page').append(
+        for(j = 0; j < joueurs.length - 1; j += 1) {
+            listeJoueurs.push(joueurs[j]);
+        }
+    }
+    $('.page').html(
+        $('<div/>').addClass('stats').append(
             $('<div/>').addClass('row').append(
-                $('<div/>').addClass('col-sm-4').append(
-                    $('<h3/>').text('Les plus gros transferts'),
-                    $('<div/>').addClass('plus-gros-transferts')
-                ),
-                $('<div/>').addClass('col-sm-4'),
-                $('<div/>').addClass('col-sm-4')
+                $('<div/>').addClass('col-sm-6 prixMoyensParPoste'),
+                $('<div/>').addClass('col-sm-6 prixMoyensParEquipe'),
+                $('<div/>').addClass('col-sm-6 budgetParEquipe')
+            )
+        )
+    );
+    loadMoyPrixParPoste(listeJoueurs);
+    loadMoyPrixParEquipe(equipes);
+    loadBudgetParEquipe(equipes, budgets);
+}
+
+function loadMoyPrixParPoste(listeJoueurs) {
+    $('.prixMoyensParPoste').append(
+        $('<h3/>').text('Prix moyens par poste'),
+        $('<table/>').addClass('table tabPrixMoyensParPoste').append(
+            $('<tr/>').append(
+                $('<th/>').text('Poste'),
+                $('<th/>').text('Prix'),
+                $('<th/>').text('Nbr'),
+                $('<th/>').text('Total')
+            )
+        )
+    );
+
+    for(i = 0; i < listeJoueurs.length - 1; i += 1) {
+        prixMoyens[listeJoueurs[i].position].push(listeJoueurs[i].price_paid);
+    }
+
+    for(i = 1; i < utils.postes.length; i += 1) {
+        prix = Math.round(prixMoyens[i].reduce(function(a,b){ return a + b; }, 0) / prixMoyens[i].length);
+        
+        $('.tabPrixMoyensParPoste').append(
+            $('<tr/>').append(
+                $('<td/>').text(utils.postes[i]),
+                $('<td/>').text(prix + 'M€'),
+                $('<td/>').text(prixMoyens[i].length),
+                $('<td/>').text(prixMoyens[i].reduce(function(a,b){ return a + b; }, 0) + 'M€')
             )
         );
+    }
+}
 
-        var stat_max_price = data.max_price,
-            $tableau = $('.plus-gros-transferts'),
-            i,
-            $ligne;
+function loadMoyPrixParEquipe(equipes) {
+    $('.prixMoyensParEquipe').append(
+        $('<h3/>').text('Prix moyens par équipe'),
+        $('<table/>').addClass('table tabPrixMoyensParEquipe').append(
+            $('<tr/>').append(
+                $('<th/>').text('Equipe'),
+                $('<th/>').text('Prix'),
+                $('<th/>').text('Nbr'),
+                $('<th/>').text('Total')
+            )
+        )
+    );
 
-        for (i in stat_max_price) {
-            if (stat_max_price.hasOwnProperty(i)) {
-                $ligne = $('<div/>').addClass('row').append(
-                    $('<div/>').addClass('col-sm-6 text-right').text(stat_max_price[i].nom),
-                    $('<div/>').addClass('col-sm-6').text(stat_max_price[i].prix)
-                );
-                $tableau.append($ligne);
-            }
+    for(i in equipes) {
+        joueurs = equipes[i].players;
+        equipe = equipes[i].name;
+        listeJoueurs = [];
+
+        for(j = 0; j < joueurs.length - 1; j += 1) {
+            listeJoueurs.push(joueurs[j].price_paid);
         }
-    });
+        prix = Math.round(listeJoueurs.reduce(function(a,b){ return a + b; }, 0) / listeJoueurs.length);
+        
+        $('.tabPrixMoyensParEquipe').append(
+            $('<tr/>').append(
+                $('<td/>').text(equipe),
+                $('<td/>').text(prix + 'M€'),
+                $('<td/>').text(listeJoueurs.length),
+                $('<td/>').text(listeJoueurs.reduce(function(a,b){ return a + b; }, 0) + 'M€')
+            )
+        );
+    }
+}
 
-    /*
-    $.getJSON('data/ligue1/match_20_01.json', function( data ) {
-        console.log(data);
+function loadBudgetParEquipe(equipes, budgets) {
+    $('.budgetParEquipe').append(
+        $('<h3/>').text('Budget par équipe'),
+        $('<table/>').addClass('table tabBudgetParEquipe').append(
+            $('<tr/>').append(
+                $('<th/>').text('Equipe'),
+                $('<th/>').text('Investi'),
+                $('<th/>').text('Restant'),
+                $('<th/>').text('Total')
+            )
+        )
+    );
 
-        var joueurs = data.Home.players;
-        for(i in joueurs) {
-            var joueur = { 'id': joueurs[i].info.idplayer, 'name': joueurs[i].info.lastname, 'rating': [joueurs[i].info.note_final_2015] };
+    for(i in equipes) {
+        joueurs = equipes[i].players;
+        equipe = equipes[i].name;
+        listeJoueurs = [];
 
-            allRating.push(joueur);
+        for(j = 0; j < joueurs.length - 1; j += 1) {
+            listeJoueurs.push(joueurs[j].price_paid);
         }
-    });
+        prix = Math.round(listeJoueurs.reduce(function(a,b){ return a + b; }, 0) / listeJoueurs.length);
+        
+        $('.tabBudgetParEquipe').append(
+            $('<tr/>').append(
+                $('<td/>').text(equipe),
+                $('<td/>').text(listeJoueurs.reduce(function(a,b){ return a + b; }, 0) + 'M€'),
+                $('<td/>').text( budgets[i.split('mpg_team_pVArFY4W1nn$$mpg_user_')[1]].budget + 'M€'),
+                $('<td/>').text( (listeJoueurs.reduce(function(a,b){ return a + b; }, 0) + budgets[i.split('mpg_team_pVArFY4W1nn$$mpg_user_')[1]].budget) + 'M€')
+            )
+        );
+    }
+}
 
-    $.getJSON('data/match_2_1_4.json', function( data ) {
-        console.log(data.data);
-        var joueurs = data.data.players;
-
-
-        for(lieu in joueurs) {
-            var liste = joueurs[lieu];
-
-            for(i in liste){
-                console.log(liste[i]);
-                var joueur = { 'id': liste[i].id, 'name': liste[i].name, 'rating': [liste[i].rating] };
-                allRating.push(joueur);
-                $('.statistiques').append(
-                    $('<div/>').addClass('row').append(
-                        $('<div/>').addClass('col-sm-6').text(liste[i].name),
-                        $('<div/>').addClass('col-sm-6').text(liste[i].rating)
-                    )
-                )
-            }
-        }
-        console.log(allRating);
-    }); */
+function getStatistiques() {
+    now = new Date();
+    
+    if(
+        utils.isStorage('effectifs') && 
+        utils.isStorage('transfertsHistorique') && 
+        utils.isStorage('listeCotes')
+    ) {
+        loadPageStatistiques(
+            utils.getStorage('effectifs').value.teams, 
+            utils.getStorage('transfertsHistorique').value,
+            utils.getStorage('transfertsHistorique').value
+        );
+    } else {
+        $.when(
+            api.getApiEffectifs(),
+            api.getApiTransfertsHistorique(), 
+            api.getApiListeCotes()
+        ).then(function(args1, args2, args3){
+            utils.setStorage('effectifs', args1[0]);
+            utils.setStorage('transfertsHistorique', args2[0]);
+            utils.setStorage('listeCotes', args3[0]);
+            loadPageStatistiques(args1[0].teams, args2[0].teams, args3[0]);
+        });
+    }
 }
 
 module.exports = {

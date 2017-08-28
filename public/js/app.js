@@ -147,7 +147,62 @@ var __makeRelativeRequire = function(require, mappings, pref) {
     return require(name);
   }
 };
-require.register("js/app.js", function(exports, require, module) {
+require.register("js/api.js", function(exports, require, module) {
+"use strict";
+
+function getApiClassement() {
+	return $.get({
+    url: "https://api.monpetitgazon.com/league/pVArFY4W1nn/ranking",
+    headers: { "Authorization": Cookies.get('token') }
+	});
+}
+
+function getApiMatchParId (id) {
+  return $.get({
+    url: "https://api.monpetitgazon.com/league/pVArFY4W1nn/results/" + id,
+    headers: { "Authorization": Cookies.get('token') }
+  });
+}
+
+function getApiEffectifs () {
+	return $.get({
+    url: "https://api.monpetitgazon.com/league/pVArFY4W1nn/teams",
+    headers: { "Authorization": Cookies.get('token') }
+	});
+}
+
+function getApiTransfertsHistorique () {
+	return $.get({
+    url: "https://api.monpetitgazon.com/league/pVArFY4W1nn/transfer/history",
+    headers: { "Authorization": Cookies.get('token') }
+	});
+}
+
+function getApiTransfertsAchats () {
+	return $.get({
+    url: "https://api.monpetitgazon.com/league/pVArFY4W1nn/transfer/buy",
+    headers: { "Authorization": Cookies.get('token') }
+	});
+}
+
+function getApiListeCotes () {
+	return $.get({
+    url: "https://api.monpetitgazon.com/quotation/1",
+    headers: { "Authorization": Cookies.get('token') }
+	});
+}
+
+module.exports = {
+  getApiClassement: getApiClassement,
+  getApiMatchParId: getApiMatchParId,
+  getApiEffectifs: getApiEffectifs,
+  getApiTransfertsHistorique: getApiTransfertsHistorique,
+  getApiTransfertsAchats: getApiTransfertsAchats,
+  getApiListeCotes: getApiListeCotes
+}
+});
+
+;require.register("js/app.js", function(exports, require, module) {
 "use strict";
 
 var utils = require('js/utils'),
@@ -178,6 +233,12 @@ function loadPage() {
         tab = path.split('?')[1].split('&'),
         page = tab[0],
         id = tab[1];
+
+    $('.page').append(
+        $('<div/>').addClass('text-center text-success').append(
+            utils.fontAwesomeIcon('spinner fa-pulse fa-3x fa-fw')
+        )
+    );
 
     utils.getTeams();
     if (page === 'home') {
@@ -217,8 +278,8 @@ function getClassement() {
         url: "https://api.monpetitgazon.com/league/pVArFY4W1nn/ranking",
         headers: { "Authorization": Cookies.get('token') }
     }).done(function(data) {
-        var classement = data.ranking,
-            clubs = data.teams,
+        var classement = (data) ? data.ranking : null,
+            clubs = (data) ? data.teams : null,
             $tableau,
             i,
             j,
@@ -246,33 +307,35 @@ function getClassement() {
             ),
             $('<tbody/>')
         );
-        
-        for (i = 0; i < classement.length; i += 1) {
-            donnees = classement[i];
-            $ligne = $('<tr/>');
 
-            for (equipe in donnees) {
-                if (donnees.hasOwnProperty(equipe)) {
-                    if (equipe === 'teamid') {
-                        $ligne.append($('<td/>').text(clubs[donnees[equipe]].name));
-                    } else if (equipe === 'rank') {
-                        $ligne.prepend($('<td/>').text(donnees[equipe]));
-                    }  else if (equipe === 'series') {
-                        $ligne.append($('<td/>').addClass('serie'));
-                        serie = donnees[equipe].split("");
-                        
-                        for(s in serie) {
-                            $ligne.find('.serie').append($('<span/>').addClass(serie[s]));
+        if(classement != null) {
+            for (i = 0; i < classement.length; i += 1) {
+                donnees = classement[i];
+                $ligne = $('<tr/>');
+
+                for (equipe in donnees) {
+                    if (donnees.hasOwnProperty(equipe)) {
+                        if (equipe === 'teamid') {
+                            $ligne.append($('<td/>').text(clubs[donnees[equipe]].name));
+                        } else if (equipe === 'rank') {
+                            $ligne.prepend($('<td/>').text(donnees[equipe]));
+                        }  else if (equipe === 'series') {
+                            $ligne.append($('<td/>').addClass('serie'));
+                            serie = donnees[equipe].split("");
+                            
+                            for(s in serie) {
+                                $ligne.find('.serie').append($('<span/>').addClass(serie[s]));
+                            }
+                            
+                        } else {
+                            $ligne.append($('<td/>').text(donnees[equipe]));
                         }
-                        
-                    } else {
-                        $ligne.append($('<td/>').text(donnees[equipe]));
                     }
                 }
+                $tableau.append($ligne);
             }
-            $tableau.append($ligne);
         }
-        $page.append($tableau);
+        $page.html($tableau);
         $tableau.bootstrapTable();
     });
 }
@@ -286,80 +349,74 @@ module.exports = {
 "use strict";
 
 var utils = require('js/utils'),
-    $page = $('.page');
+    api = require('js/api'),
+    $page = $('.page'),
+    clubs,
+    equipes,
+    i,
+    effectif,
+    tab_joueurs,
+    equipe_joueurs,
+    $ligne;
 
-function getEffectifs() {
-    $.get({
-        url: "https://api.monpetitgazon.com/league/pVArFY4W1nn/teams",
-        headers: { "Authorization": Cookies.get('token') }
-    }).done(function (data){
-        var clubs = data.teamsid,
-            effectifs = data.teams,
-            i,
-            effectif,
-            tab_joueurs,
-            equipe_joueurs,
-            $ligne;
 
-        function redirect(e) {
-            window.location.href = '?joueur&id=' + $(e.target).data('idplayer');
-        }
-        
-        $('.page').append(
-            /*$('<div/>').addClass('filtres').append(
-                $('<div/>').addClass('row').append(
-                    $('<div/>').addClass('col-md-2').append(
-                        $('<label/>').text('Equipe')
-                    ),
-                    $('<div/>').addClass('col-md-10').append(
-                        $('<select/>').addClass('selectpicker').append(
-                            $('<option/>').val('all').text('Toutes')
-                        )
-                    )
+function redirect(e) {
+    window.location.href = '?joueur&id=' + $(e.target).data('idplayer');
+}
+
+function loadPageEffectifs(effectifs) {
+    clubs = effectifs.teamsid,
+    equipes = effectifs.teams,
+    
+    $('.page').html(
+        $('<table/>').addClass('table').attr('data-sort-name', 'joueur').attr('data-toggle', 'table').append(
+            $('<thead/>').append(
+                $('<tr/>').append(
+                    $('<th/>').attr('data-sortable', true).attr('data-field', 'joueur').text('Joueur'),
+                    $('<th/>').attr('data-sortable', true).attr('data-field', 'poste').text('Poste'),
+                    $('<th/>').attr('data-sortable', true).attr('data-field', 'club').text('Club'),
+                    $('<th/>').attr('data-sortable', true).attr('data-field', 'prix_achat').text('Prix d\'achat'),
+                    $('<th/>').attr('data-sortable', true).attr('data-field', 'team_mpg').text('Team MPG')
                 )
-            ),*/
-            $('<table/>').addClass('table').attr('data-sort-name', 'joueur').attr('data-toggle', 'table').append(
-                $('<thead/>').append(
-                    $('<tr/>').append(
-                        $('<th/>').attr('data-sortable', true).attr('data-field', 'joueur').text('Joueur'),
-                        $('<th/>').attr('data-sortable', true).attr('data-field', 'poste').text('Poste'),
-                        $('<th/>').attr('data-sortable', true).attr('data-field', 'club').text('Club'),
-                        $('<th/>').attr('data-sortable', true).attr('data-field', 'prix_achat').text('Prix d\'achat'),
-                        $('<th/>').attr('data-sortable', true).attr('data-field', 'team_mpg').text('Team MPG')
-                    )
-                ),
-                $('<tbody/>')
-            )
-        );
+            ),
+            $('<tbody/>')
+        )
+    );
 
-        /*for (i = 0; i < clubs.length; i += 1) {
-            $('.page .filtres .selectpicker').append($('<option/>').val(clubs[i].id).text(clubs[i].name));
-        }*/
+    for (effectif in equipes) {
+        if (equipes.hasOwnProperty(effectif)) {
+            tab_joueurs = equipes[effectif].players;
+            equipe_joueurs = equipes[effectif].name;
 
-        for (effectif in effectifs) {
-            if (effectifs.hasOwnProperty(effectif)) {
-                tab_joueurs = effectifs[effectif].players;
-                equipe_joueurs = effectifs[effectif].name;
-
-                for (i = 0; i < tab_joueurs.length; i += 1) {
-                    $ligne = $('<tr/>').attr('data-idplayer', tab_joueurs[i].id).append(
-                        $('<td/>').html((tab_joueurs[i].firstname) ? tab_joueurs[i].firstname + ' ' + tab_joueurs[i].lastname : '' + tab_joueurs[i].lastname),
-                        $('<td/>').text(utils.postes[tab_joueurs[i].position]),
-                        $('<td/>').text(tab_joueurs[i].club),
-                        $('<td/>').text(tab_joueurs[i].price_paid),
-                        $('<td/>').attr('data-teamid', effectifs[effectif].id).text(equipe_joueurs)
-                    ).on('click', redirect);
-                    $('.page table tbody').append($ligne);
-                }
+            for (i = 0; i < tab_joueurs.length; i += 1) {
+                $ligne = $('<tr/>').attr('data-idplayer', tab_joueurs[i].id).append(
+                    $('<td/>').html((tab_joueurs[i].firstname) ? tab_joueurs[i].firstname + ' ' + tab_joueurs[i].lastname : '' + tab_joueurs[i].lastname),
+                    $('<td/>').text(utils.postes[tab_joueurs[i].position]),
+                    $('<td/>').text(tab_joueurs[i].club),
+                    $('<td/>').text(tab_joueurs[i].price_paid),
+                    $('<td/>').text(equipe_joueurs)
+                ).on('click', redirect);
+                $('.page table tbody').append($ligne);
             }
         }
-        // $('.page .filtres .selectpicker').selectpicker('refresh');
-        $('.page table').bootstrapTable({
-            pagination: true,
-            search: true,
-            showColumns: true
-        });
+    }
+    // $('.page .filtres .selectpicker').selectpicker('refresh');
+    $('.page table').bootstrapTable({
+        pagination: true,
+        search: true,
+        showColumns: true
     });
+}
+
+function getEffectifs() {
+    if(utils.getStorage('effectifs') != null) {
+        loadPageEffectifs(utils.getStorage('effectifs').value);
+    } else {
+        $.when(api.getApiEffectifs()).then(function(args){
+            utils.setStorage('effectifs', args);
+            loadPageEffectifs(args);
+        });
+    }
 }
 
 module.exports = {
@@ -373,7 +430,7 @@ module.exports = {
 var $page = $('.page');
 
 function getHome() {
-    $page.append(
+    $page.html(
         $('<div/>').addClass('row').append(
             $('<div/>').addClass('col-sm-6 col-sm-offset-3').append(
                 $('<form/>').append(
@@ -409,6 +466,7 @@ function seConnecter(email, password) {
     }).done(function(data) {
         console.log(data);
         Cookies.set('token', data.token, { expires: 7 });
+        window.location.href = '?classement';
         // $page.append(data); 
     }).fail(function(data) {
         $page.find('form').before(
@@ -502,17 +560,17 @@ function getLigue1() {
                 }
             }
         }
-     }
+    }
 
     function loadMatchsParJournee(derniereJournee, effectifs) {
-        for(i = 18; i <= derniereJournee; i += 1) {
+        for(i = 1; i <= derniereJournee; i += 1) {
             tabPromessesMatchParJournee.push(i);
         }
         listePromessesMatchParJournee = tabPromessesMatchParJournee.map(getListeMatchParJournee);
     }
 
     function loadLiguePage(listeNotes, effectifs) {
-        $('.page').append(
+        $page.html(
             $('<table/>').addClass('table ligue1').attr('data-sort-name', 'joueur').attr('data-toggle', 'table').append(
                 $('<thead/>'),
                 $('<tbody/>')
@@ -641,15 +699,20 @@ function getLigue1() {
         derniereJournee = args1[0].day;
         effectifs = args2[0];
 
-        for(i = 18; i <= derniereJournee; i += 1) {
+        for(i = 1; i <= derniereJournee; i += 1) {
             tabPromessesMatchParJournee.push(i);
         }
         listePromessesMatchParJournee = tabPromessesMatchParJournee.map(getListeMatchParJournee);
         
         $.when.apply($, listePromessesMatchParJournee).then(function(){
             for(i = 0; i < tabPromessesMatchParJournee.length; ++i) {
-                journee = arguments[i][0].day;
-                matchs = arguments[i][0].matches;
+                if(arguments[i].day != undefined) {
+                    journee = arguments[i].day;
+                    matchs = arguments[i].matches;
+                } else {
+                    journee = arguments[i][0].day;
+                    matchs = arguments[i][0].matches;
+                }
                 listeJournees.push(journee);
                 
                 for(j in matchs) {
@@ -668,10 +731,18 @@ function getLigue1() {
             $.when.apply($, listePromessesDetailsParId).then(function(){
                 for(i = 0; i < tabPromessesDetailsParId.length; ++i) {
                     journee = tabJournee[i];
-                    eq_home = arguments[i][0].Home.club;
-                    eq_away = arguments[i][0].Away.club;
-                    j_home = arguments[i][0].Home.players;
-                    j_away = arguments[i][0].Away.players;
+                    
+                    if(arguments[i].length > 0) {
+                        eq_home = arguments[i][0].Home.club;
+                        eq_away = arguments[i][0].Away.club;
+                        j_home = arguments[i][0].Home.players;
+                        j_away = arguments[i][0].Away.players;
+                    } else {
+                        eq_home = arguments[i].Home.club;
+                        eq_away = arguments[i].Away.club;
+                        j_home = arguments[i].Home.players;
+                        j_away = arguments[i].Away.players;
+                    }
                     listeJoueurs = Object.assign(j_home, j_away);
 
                     for (j in listeJoueurs) {
@@ -731,14 +802,12 @@ function getLigue1() {
                     }
                 }
 
-                $('.page').append(
+                $('.page').html(
                     $('<table/>').addClass('table ligue1').attr('data-sort-name', 'joueur').attr('data-toggle', 'table').attr('data-filter-control', 'true').attr('data-filter-show-clear', 'true').append(
                         $('<thead/>'),
                         $('<tbody/>')
                     )
                 );
-
-                
 
                 $ligneHead = $('<tr/>').append(
                     $('<th/>').attr('data-sortable', true).attr('data-field', 'joueur').text('Joueur'),
@@ -888,62 +957,71 @@ function getLive() {
             headers: { "Authorization": Cookies.get('token') }
         });
     }
+
+    function loadNoLive () {
+        $page.html(
+            $('<div/>').addClass('alert alert-warning text-center').attr('role', 'alert').append(
+                utils.fontAwesomeIcon('ban text-warning'),
+                $('<span/>').text('Pas de live actuellement')
+            )
+        );
+    }
     
-    function loadMatchsLivePage (listeMatchsStorage) {
-        console.log(listeMatchsStorage);
+    function loadMatchsLivePage (listeMatchsStorage, listeEquipesLive) {
+        console.log(listeMatchsStorage, listeEquipesLive);
         
-        for(i = 0; i < listeMatchsStorage.length - 1; i+=1) {
+        for(i = 0; i < listeEquipesLive.length - 1; i+=1) {
             console.log(listeMatchsStorage[i][0]);
         }
     }
     
-    function loadLivePage (derniersResultats, listeEquipesLive) {        
-        for(i = 0; i < derniersResultats.length - 1; i += 1) {
-            if(derniersResultats[i].home.score !== undefined && derniersResultats[i].home.score !== '') {
+    function loadLivePage (derniersResultats, listeEquipesLive) {
+        console.log(derniersResultats, listeEquipesLive);
+
+        for(i = 0; i < derniersResultats.length; i += 1) {
+            if(
+                derniersResultats[i].home.score !== undefined && 
+                derniersResultats[i].home.score !== ''
+            ) {
                 tabPromesses.push(derniersResultats[i].id);
                 isStorage = utils.getStorage('match_' + derniersResultats[i].id) != null && isStorage;
-
-                if(utils.getStorage('match_' + derniersResultats[i].id) != null)
+                
+                if(isStorage)
                     listeMatchsStorage.push(utils.getStorage('match_' + derniersResultats[i].id).value);
             }
         }
         listePromesses1 = tabPromesses.map(getListeMatchs);
         
-        for(i = 0; i < listeEquipesLive.length - 1; i += 1) {
+        tabPromesses = [];
+        for(i = 0; i < listeEquipesLive.length; i += 1) {
             tabPromesses.push([listeEquipesLive[i].id, listeEquipesLive[0].home.id]);
             tabPromesses.push([listeEquipesLive[i].id, listeEquipesLive[0].away.id]);
             
             /*
-                tabPromesses.push(listeEquipesLive[i].id);
-                isStorage = utils.getStorage('match_' + derniersResultats[i].id) != null && isStorage;
+            isStorage = utils.getStorage('equipeLive_' + listeEquipesLive[i].id) != null && isStorage;
 
-                if(utils.getStorage('match_' + derniersResultats[i].id) != null)
-                    listeMatchsStorage.push(utils.getStorage('match_' + derniersResultats[i].id).value);
-            */
+            if(utils.getStorage('equipeLive_' + listeEquipesLive[i].id) != null)
+                listeEquipesStorage.push(utils.getStorage('equipeLive_' + listeEquipesLive[i].id).value);*/
         }
-        
-        listePromesses2 = tabPromesses.map(getEquipeLive);        
+        listePromesses2 = tabPromesses.map(getEquipeLive);
         listePromesses = listePromesses1.concat(listePromesses2);
-        
-        if(isStorage) {
-            loadMatchsLivePage(listeMatchsStorage);
-        } else {
-            $.when.apply($, listePromesses).then(function(){
-                
-                loadMatchsLivePage(arguments);
-            });
-        }
-    }
-    
-    if(utils.getStorage('derniersResultats') != null && utils.getStorage('listeEquipesLive') != null) {
-        loadLivePage(utils.getStorage('derniersResultats').value, utils.getStorage('listeEquipesLive').value);
-    } else {
-        $.when(getDerniersResultats(), getListeEquipesLive()).then(function(args1, args2){
-            utils.setStorage('derniersResultats', args1[0].matches);
-            utils.setStorage('listeEquipesLive', args2[0][0].matches);
-            loadLivePage(args1[0].matches, args2[0][0].matches);
+
+        $.when.apply($, listePromesses).then(function(){
+            console.log(arguments);
+            // loadMatchsLivePage(arguments);
         });
     }
+    
+    $.when(getDerniersResultats(), getListeEquipesLive()).then(function(args1, args2){
+        utils.setStorage('derniersResultats', args1[0].matches);
+
+        if(args2[0].success) {
+            loadNoLive();
+        } else {
+            utils.setStorage('listeEquipesLive', args2[0][0].matches);
+            loadLivePage(args1[0].matches, args2[0][0].matches);
+        }
+    });
 }
 
 module.exports = {
@@ -979,7 +1057,7 @@ function getMatch(id) {
     }
     function erreurPromesse() {
         return function(data) {
-            $page.append(
+            $page.html(
                 $('<div/>').addClass('alert alert-danger text-center').attr('role', 'alert').append(
                     utils.fontAwesomeIcon('exclamation-triangle'),
                     $('<span/>').text('Le match que vous cherchez n\'existe pas')
@@ -996,43 +1074,45 @@ function getMatch(id) {
         teamHome = args.data.teamHome;
         teamAway = args.data.teamAway;
 
-        $page.append(
-            $('<div/>').addClass('header-match').append(
-                $('<div/>').addClass('row').append(
-                    $('<div/>').addClass('col-sm-4 col-md-5 text-right').append(
-                        $('<div/>').addClass('row').append(
-                            $('<div/>').addClass('col-xs-9 col-sm-12').append(
-                                $('<div/>').addClass('equipe').append(
-                                    $('<span/>').text(teamHome.name)
+        $page.html(
+            $('<div/>').append(
+                $('<div/>').addClass('header-match').append(
+                    $('<div/>').addClass('row').append(
+                        $('<div/>').addClass('col-sm-4 col-md-5 text-right').append(
+                            $('<div/>').addClass('row').append(
+                                $('<div/>').addClass('col-xs-9 col-sm-12').append(
+                                    $('<div/>').addClass('equipe').append(
+                                        $('<span/>').text(teamHome.name)
+                                    )
+                                ),
+                                $('<div/>').addClass('visible-xs col-xs-3').append(
+                                    $('<div/>').addClass('score').text(teamHome.score)
                                 )
-                            ),
-                            $('<div/>').addClass('visible-xs col-xs-3').append(
-                                $('<div/>').addClass('score').text(teamHome.score)
+                            )
+                        ),
+                        $('<div/>').addClass('hidden-xs col-sm-4 col-md-2 text-center').append(
+                            $('<div/>').addClass('score').text(teamHome.score + ' - ' + teamAway.score)
+                        ),
+                        $('<div/>').addClass('col-sm-4 col-md-5').append(
+                            $('<div/>').addClass('row').append(
+                                $('<div/>').addClass('col-xs-9 col-sm-12').append(
+                                    $('<div/>').addClass('equipe').append(
+                                        $('<span/>').text(teamAway.name)
+                                    )
+                                ),
+                                $('<div/>').addClass('visible-xs col-xs-3').append(
+                                    $('<div/>').addClass('score').text(teamAway.score)
+                                )
                             )
                         )
                     ),
-                    $('<div/>').addClass('hidden-xs col-sm-4 col-md-2 text-center').append(
-                        $('<div/>').addClass('score').text(teamHome.score + ' - ' + teamAway.score)
-                    ),
-                    $('<div/>').addClass('col-sm-4 col-md-5').append(
-                        $('<div/>').addClass('row').append(
-                            $('<div/>').addClass('col-xs-9 col-sm-12').append(
-                                $('<div/>').addClass('equipe').append(
-                                    $('<span/>').text(teamAway.name)
-                                )
-                            ),
-                            $('<div/>').addClass('visible-xs col-xs-3').append(
-                                $('<div/>').addClass('score').text(teamAway.score)
-                            )
-                        )
+                    $('<div/>').addClass('row').append(
+                        $('<div/>').addClass('col-sm-5 buteursHome'),
+                        $('<div/>').addClass('col-sm-5 col-sm-offset-2 buteursAway')
                     )
                 ),
-                $('<div/>').addClass('row').append(
-                    $('<div/>').addClass('col-sm-5 buteursHome'),
-                    $('<div/>').addClass('col-sm-5 col-sm-offset-2 buteursAway')
-                )
-            ),
-            $('<div/>').addClass('content-match')
+                $('<div/>').addClass('content-match')
+            )
         );
         
         $tabHome = $('<table/>').addClass('table').append(
@@ -1134,11 +1214,11 @@ function getMatch(id) {
                     }
                     if(j != 'own_goal') {
                         $page.find('.buteursAway').append(
-                            $('<div/>').addClass('buteur').append( players.home[i].name, $icons )
+                            $('<div/>').addClass('buteur').append( players.away[i].name, $icons )
                         );
                     } else {
                         $page.find('.buteursHome').append(
-                            $('<div/>').addClass('buteur text-right').append( $icons, players.home[i].name )
+                            $('<div/>').addClass('buteur text-right').append( $icons, players.away[i].name )
                         );
                     }
                 }
@@ -1261,16 +1341,24 @@ function getResultats () {
         listePromesses = tabPromesses.map(getListeMatchParJournee);
 
         $.when.apply($, listePromesses).then(function(){
-            $page.append(
-                $('<div/>').addClass('listeJournees').append(
-                    $('<ul/>')
-                ),
-                $('<div/>').addClass('listeResultats')
+            $page.html(
+                $('<div/>').append(
+                    $('<div/>').addClass('listeJournees').append(
+                        $('<ul/>')
+                    ), 
+                    $('<div/>').addClass('listeResultats')
+                )
             );
-
+            
             for(i = 0; i < listePromesses.length; ++i) {
-                journee = arguments[i][0].data.results.currentMatchDay;
-                matchs = arguments[i][0].data.results.matches;
+                console.log(arguments[i]);
+                if(arguments[i].length > 0) {
+                    journee = arguments[i][0].data.results.currentMatchDay;
+                    matchs = arguments[i][0].data.results.matches;
+                } else {
+                    journee = arguments[i].data.results.currentMatchDay;
+                    matchs = arguments[i].data.results.matches;
+                }
                 listeJournees.push(journee);
 
                 $page.find('.listeJournees ul').append(
@@ -1332,81 +1420,171 @@ module.exports = {
 ;require.register("js/statistiques.js", function(exports, require, module) {
 "use strict";
 
-var $page = $('.page');
+var utils = require('js/utils'),
+    api = require('js/api'),
+    $page = $('.page'),
+    allRating = [],
+    now,
+    joueurs,
+    listeJoueurs = [],
+    prixMoyens = [0, [], [], [], []],
+    result = [],
+    stats = {},
+    effectif,
+    equipe,
+    prix,
+    prixPrec,
+    i,
+    j;
 
-function getStatistiques() {
+function loadPageStatistiques(equipes, budgets, cotes) { 
+    console.log(cotes);
+    
+    for(i in equipes) {
+        joueurs = equipes[i].players;
 
-    var allRating = [];
-
-    $.ajax({
-        url: "ajax/liste.php",
-        method: "POST",
-        dataType : 'json',
-        data: { page: 'statistiques' }
-    }).done(function (data) {
-        // console.log(data);
-
-        $('.page').append(
+        for(j = 0; j < joueurs.length - 1; j += 1) {
+            listeJoueurs.push(joueurs[j]);
+        }
+    }
+    $('.page').html(
+        $('<div/>').addClass('stats').append(
             $('<div/>').addClass('row').append(
-                $('<div/>').addClass('col-sm-4').append(
-                    $('<h3/>').text('Les plus gros transferts'),
-                    $('<div/>').addClass('plus-gros-transferts')
-                ),
-                $('<div/>').addClass('col-sm-4'),
-                $('<div/>').addClass('col-sm-4')
+                $('<div/>').addClass('col-sm-6 prixMoyensParPoste'),
+                $('<div/>').addClass('col-sm-6 prixMoyensParEquipe'),
+                $('<div/>').addClass('col-sm-6 budgetParEquipe')
+            )
+        )
+    );
+    loadMoyPrixParPoste(listeJoueurs);
+    loadMoyPrixParEquipe(equipes);
+    loadBudgetParEquipe(equipes, budgets);
+}
+
+function loadMoyPrixParPoste(listeJoueurs) {
+    $('.prixMoyensParPoste').append(
+        $('<h3/>').text('Prix moyens par poste'),
+        $('<table/>').addClass('table tabPrixMoyensParPoste').append(
+            $('<tr/>').append(
+                $('<th/>').text('Poste'),
+                $('<th/>').text('Prix'),
+                $('<th/>').text('Nbr'),
+                $('<th/>').text('Total')
+            )
+        )
+    );
+
+    for(i = 0; i < listeJoueurs.length - 1; i += 1) {
+        prixMoyens[listeJoueurs[i].position].push(listeJoueurs[i].price_paid);
+    }
+
+    for(i = 1; i < utils.postes.length; i += 1) {
+        prix = Math.round(prixMoyens[i].reduce(function(a,b){ return a + b; }, 0) / prixMoyens[i].length);
+        
+        $('.tabPrixMoyensParPoste').append(
+            $('<tr/>').append(
+                $('<td/>').text(utils.postes[i]),
+                $('<td/>').text(prix + 'M€'),
+                $('<td/>').text(prixMoyens[i].length),
+                $('<td/>').text(prixMoyens[i].reduce(function(a,b){ return a + b; }, 0) + 'M€')
             )
         );
+    }
+}
 
-        var stat_max_price = data.max_price,
-            $tableau = $('.plus-gros-transferts'),
-            i,
-            $ligne;
+function loadMoyPrixParEquipe(equipes) {
+    $('.prixMoyensParEquipe').append(
+        $('<h3/>').text('Prix moyens par équipe'),
+        $('<table/>').addClass('table tabPrixMoyensParEquipe').append(
+            $('<tr/>').append(
+                $('<th/>').text('Equipe'),
+                $('<th/>').text('Prix'),
+                $('<th/>').text('Nbr'),
+                $('<th/>').text('Total')
+            )
+        )
+    );
 
-        for (i in stat_max_price) {
-            if (stat_max_price.hasOwnProperty(i)) {
-                $ligne = $('<div/>').addClass('row').append(
-                    $('<div/>').addClass('col-sm-6 text-right').text(stat_max_price[i].nom),
-                    $('<div/>').addClass('col-sm-6').text(stat_max_price[i].prix)
-                );
-                $tableau.append($ligne);
-            }
+    for(i in equipes) {
+        joueurs = equipes[i].players;
+        equipe = equipes[i].name;
+        listeJoueurs = [];
+
+        for(j = 0; j < joueurs.length - 1; j += 1) {
+            listeJoueurs.push(joueurs[j].price_paid);
         }
-    });
+        prix = Math.round(listeJoueurs.reduce(function(a,b){ return a + b; }, 0) / listeJoueurs.length);
+        
+        $('.tabPrixMoyensParEquipe').append(
+            $('<tr/>').append(
+                $('<td/>').text(equipe),
+                $('<td/>').text(prix + 'M€'),
+                $('<td/>').text(listeJoueurs.length),
+                $('<td/>').text(listeJoueurs.reduce(function(a,b){ return a + b; }, 0) + 'M€')
+            )
+        );
+    }
+}
 
-    /*
-    $.getJSON('data/ligue1/match_20_01.json', function( data ) {
-        console.log(data);
+function loadBudgetParEquipe(equipes, budgets) {
+    $('.budgetParEquipe').append(
+        $('<h3/>').text('Budget par équipe'),
+        $('<table/>').addClass('table tabBudgetParEquipe').append(
+            $('<tr/>').append(
+                $('<th/>').text('Equipe'),
+                $('<th/>').text('Investi'),
+                $('<th/>').text('Restant'),
+                $('<th/>').text('Total')
+            )
+        )
+    );
 
-        var joueurs = data.Home.players;
-        for(i in joueurs) {
-            var joueur = { 'id': joueurs[i].info.idplayer, 'name': joueurs[i].info.lastname, 'rating': [joueurs[i].info.note_final_2015] };
+    for(i in equipes) {
+        joueurs = equipes[i].players;
+        equipe = equipes[i].name;
+        listeJoueurs = [];
 
-            allRating.push(joueur);
+        for(j = 0; j < joueurs.length - 1; j += 1) {
+            listeJoueurs.push(joueurs[j].price_paid);
         }
-    });
+        prix = Math.round(listeJoueurs.reduce(function(a,b){ return a + b; }, 0) / listeJoueurs.length);
+        
+        $('.tabBudgetParEquipe').append(
+            $('<tr/>').append(
+                $('<td/>').text(equipe),
+                $('<td/>').text(listeJoueurs.reduce(function(a,b){ return a + b; }, 0) + 'M€'),
+                $('<td/>').text( budgets[i.split('mpg_team_pVArFY4W1nn$$mpg_user_')[1]].budget + 'M€'),
+                $('<td/>').text( (listeJoueurs.reduce(function(a,b){ return a + b; }, 0) + budgets[i.split('mpg_team_pVArFY4W1nn$$mpg_user_')[1]].budget) + 'M€')
+            )
+        );
+    }
+}
 
-    $.getJSON('data/match_2_1_4.json', function( data ) {
-        console.log(data.data);
-        var joueurs = data.data.players;
-
-
-        for(lieu in joueurs) {
-            var liste = joueurs[lieu];
-
-            for(i in liste){
-                console.log(liste[i]);
-                var joueur = { 'id': liste[i].id, 'name': liste[i].name, 'rating': [liste[i].rating] };
-                allRating.push(joueur);
-                $('.statistiques').append(
-                    $('<div/>').addClass('row').append(
-                        $('<div/>').addClass('col-sm-6').text(liste[i].name),
-                        $('<div/>').addClass('col-sm-6').text(liste[i].rating)
-                    )
-                )
-            }
-        }
-        console.log(allRating);
-    }); */
+function getStatistiques() {
+    now = new Date();
+    
+    if(
+        utils.isStorage('effectifs') && 
+        utils.isStorage('transfertsHistorique') && 
+        utils.isStorage('listeCotes')
+    ) {
+        loadPageStatistiques(
+            utils.getStorage('effectifs').value.teams, 
+            utils.getStorage('transfertsHistorique').value,
+            utils.getStorage('transfertsHistorique').value
+        );
+    } else {
+        $.when(
+            api.getApiEffectifs(),
+            api.getApiTransfertsHistorique(), 
+            api.getApiListeCotes()
+        ).then(function(args1, args2, args3){
+            utils.setStorage('effectifs', args1[0]);
+            utils.setStorage('transfertsHistorique', args2[0]);
+            utils.setStorage('listeCotes', args3[0]);
+            loadPageStatistiques(args1[0].teams, args2[0].teams, args3[0]);
+        });
+    }
 }
 
 module.exports = {
@@ -1435,6 +1613,7 @@ module.exports = {
 
 ;require.register("js/utils.js", function(exports, require, module) {
 "use strict";
+
 var postes = [
         'Aucun',
         'Gardien',
@@ -1442,23 +1621,11 @@ var postes = [
         'Milieu',
         'Attaquant'
     ],
-    teams = [];
+    teams = [],
+    now;
 
 function getTeams() {
-    $.ajax({
-        url: "ajax/liste.php",
-        method: "POST",
-        dataType : 'json',
-        data: { page: 'effectif' }
-    }).done(function (data) {
-        var clubs = data.teamsid,
-            i;
-        
-        for (i = 0; i < clubs.length; i += 1) {
-            teams.push(clubs[i].name);
-        }
-        return teams;
-    });
+    return teams;
 }
 
 function fontAwesomeIcon(nom) {
@@ -1488,7 +1655,18 @@ function getStorage (key) {
 }
 
 function setStorage (key, value) {
-    localStorage.setItem(key, JSON.stringify({value: value}));
+    var expires = new Date();
+    expires.setDate(expires.getDay() + 1);
+    localStorage.setItem(key, JSON.stringify({value: value, expires: expires}));
+}
+
+function isStorage (key) {
+    now = new Date();
+    if(getStorage(key) != null && getStorage(key).expires < now.getTime()) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 module.exports = {
@@ -1498,6 +1676,7 @@ module.exports = {
     classNote: classNote,
     getStorage: getStorage,
     setStorage: setStorage,
+    isStorage: isStorage
 }
 });
 

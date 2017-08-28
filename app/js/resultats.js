@@ -55,16 +55,24 @@ function getResultats () {
         listePromesses = tabPromesses.map(getListeMatchParJournee);
 
         $.when.apply($, listePromesses).then(function(){
-            $page.append(
-                $('<div/>').addClass('listeJournees').append(
-                    $('<ul/>')
-                ),
-                $('<div/>').addClass('listeResultats')
+            $page.html(
+                $('<div/>').append(
+                    $('<div/>').addClass('listeJournees').append(
+                        $('<ul/>')
+                    ), 
+                    $('<div/>').addClass('listeResultats')
+                )
             );
-
+            
             for(i = 0; i < listePromesses.length; ++i) {
-                journee = arguments[i][0].data.results.currentMatchDay;
-                matchs = arguments[i][0].data.results.matches;
+                console.log(arguments[i]);
+                if(arguments[i].length > 0) {
+                    journee = arguments[i][0].data.results.currentMatchDay;
+                    matchs = arguments[i][0].data.results.matches;
+                } else {
+                    journee = arguments[i].data.results.currentMatchDay;
+                    matchs = arguments[i].data.results.matches;
+                }
                 listeJournees.push(journee);
 
                 $page.find('.listeJournees ul').append(

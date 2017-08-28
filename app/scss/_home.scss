@@ -103,8 +103,15 @@ textarea {
     }
 }
 
-// Page matchs
+// Page statistiques
+.stats {
+    h3 {
+        color: $vert;
+        margin-bottom: 10px;
+    }
+}
 
+// Page matchs
 .header-match {
     margin: 25px 0;
     
@@ -204,5 +211,12 @@ textarea {
                 }
             }
         }
+    }
+}
+
+.alert {
+    .fa {
+        margin-right: 10px;
+        font-size: 24px;
     }
 }

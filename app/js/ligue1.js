@@ -77,17 +77,17 @@ function getLigue1() {
                 }
             }
         }
-     }
+    }
 
     function loadMatchsParJournee(derniereJournee, effectifs) {
-        for(i = 18; i <= derniereJournee; i += 1) {
+        for(i = 1; i <= derniereJournee; i += 1) {
             tabPromessesMatchParJournee.push(i);
         }
         listePromessesMatchParJournee = tabPromessesMatchParJournee.map(getListeMatchParJournee);
     }
 
     function loadLiguePage(listeNotes, effectifs) {
-        $('.page').append(
+        $page.html(
             $('<table/>').addClass('table ligue1').attr('data-sort-name', 'joueur').attr('data-toggle', 'table').append(
                 $('<thead/>'),
                 $('<tbody/>')
@@ -216,15 +216,20 @@ function getLigue1() {
         derniereJournee = args1[0].day;
         effectifs = args2[0];
 
-        for(i = 18; i <= derniereJournee; i += 1) {
+        for(i = 1; i <= derniereJournee; i += 1) {
             tabPromessesMatchParJournee.push(i);
         }
         listePromessesMatchParJournee = tabPromessesMatchParJournee.map(getListeMatchParJournee);
         
         $.when.apply($, listePromessesMatchParJournee).then(function(){
             for(i = 0; i < tabPromessesMatchParJournee.length; ++i) {
-                journee = arguments[i][0].day;
-                matchs = arguments[i][0].matches;
+                if(arguments[i].day != undefined) {
+                    journee = arguments[i].day;
+                    matchs = arguments[i].matches;
+                } else {
+                    journee = arguments[i][0].day;
+                    matchs = arguments[i][0].matches;
+                }
                 listeJournees.push(journee);
                 
                 for(j in matchs) {
@@ -243,10 +248,18 @@ function getLigue1() {
             $.when.apply($, listePromessesDetailsParId).then(function(){
                 for(i = 0; i < tabPromessesDetailsParId.length; ++i) {
                     journee = tabJournee[i];
-                    eq_home = arguments[i][0].Home.club;
-                    eq_away = arguments[i][0].Away.club;
-                    j_home = arguments[i][0].Home.players;
-                    j_away = arguments[i][0].Away.players;
+                    
+                    if(arguments[i].length > 0) {
+                        eq_home = arguments[i][0].Home.club;
+                        eq_away = arguments[i][0].Away.club;
+                        j_home = arguments[i][0].Home.players;
+                        j_away = arguments[i][0].Away.players;
+                    } else {
+                        eq_home = arguments[i].Home.club;
+                        eq_away = arguments[i].Away.club;
+                        j_home = arguments[i].Home.players;
+                        j_away = arguments[i].Away.players;
+                    }
                     listeJoueurs = Object.assign(j_home, j_away);
 
                     for (j in listeJoueurs) {
@@ -306,14 +319,12 @@ function getLigue1() {
                     }
                 }
 
-                $('.page').append(
+                $('.page').html(
                     $('<table/>').addClass('table ligue1').attr('data-sort-name', 'joueur').attr('data-toggle', 'table').attr('data-filter-control', 'true').attr('data-filter-show-clear', 'true').append(
                         $('<thead/>'),
                         $('<tbody/>')
                     )
                 );
-
-                
 
                 $ligneHead = $('<tr/>').append(
                     $('<th/>').attr('data-sortable', true).attr('data-field', 'joueur').text('Joueur'),

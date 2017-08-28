@@ -1,4 +1,5 @@
 "use strict";
+
 var postes = [
         'Aucun',
         'Gardien',
@@ -6,23 +7,11 @@ var postes = [
         'Milieu',
         'Attaquant'
     ],
-    teams = [];
+    teams = [],
+    now;
 
 function getTeams() {
-    $.ajax({
-        url: "ajax/liste.php",
-        method: "POST",
-        dataType : 'json',
-        data: { page: 'effectif' }
-    }).done(function (data) {
-        var clubs = data.teamsid,
-            i;
-        
-        for (i = 0; i < clubs.length; i += 1) {
-            teams.push(clubs[i].name);
-        }
-        return teams;
-    });
+    return teams;
 }
 
 function fontAwesomeIcon(nom) {
@@ -52,7 +41,18 @@ function getStorage (key) {
 }
 
 function setStorage (key, value) {
-    localStorage.setItem(key, JSON.stringify({value: value}));
+    var expires = new Date();
+    expires.setDate(expires.getDay() + 1);
+    localStorage.setItem(key, JSON.stringify({value: value, expires: expires}));
+}
+
+function isStorage (key) {
+    now = new Date();
+    if(getStorage(key) != null && getStorage(key).expires < now.getTime()) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 module.exports = {
@@ -62,4 +62,5 @@ module.exports = {
     classNote: classNote,
     getStorage: getStorage,
     setStorage: setStorage,
+    isStorage: isStorage
 }
