@@ -9,6 +9,8 @@ var utils = require('js/utils'),
     classement = require('js/classement'),
     effectifs = require('js/effectifs'),
     ligue1 = require('js/ligue1'),
+    pl = require('js/pl'),
+    liga = require('js/liga'),
     match = require('js/match'),
 
     /* Variables gloables */
@@ -18,7 +20,7 @@ var utils = require('js/utils'),
 /* Fonctions globales */
 
 function get404() {
-    $page.append(
+    $page.html(
         $('<h1/>').text('La page demandée n\'existe pas !')
     )
 }
@@ -29,7 +31,7 @@ function loadPage() {
         page = tab[0],
         id = tab[1];
 
-    $('.page').append(
+    $page.append(
         $('<div/>').addClass('text-center text-success').append(
             utils.fontAwesomeIcon('spinner fa-pulse fa-3x fa-fw')
         )
@@ -54,6 +56,10 @@ function loadPage() {
         match.getMatch(id);
     } else if (page === 'ligue1') {
         ligue1.getLigue1();
+    } else if (page === 'pl') {
+        pl.getPl();
+    } else if (page === 'liga') {
+        liga.getLiga();
     } else {
         get404();
     }

@@ -89,28 +89,28 @@ header {
 textarea {
   width: 100%; }
 
-.ligue1 td.perf-top {
+.ligue1 td.perf-top, .pl td.perf-top, .liga td.perf-top {
   background-color: #029f50; }
 
-.ligue1 td.perf-good {
+.ligue1 td.perf-good, .pl td.perf-good, .liga td.perf-good {
   background-color: #79a73b; }
 
-.ligue1 td.perf-normal {
+.ligue1 td.perf-normal, .pl td.perf-normal, .liga td.perf-normal {
   background-color: #f0af25; }
 
-.ligue1 td.perf-bad {
+.ligue1 td.perf-bad, .pl td.perf-bad, .liga td.perf-bad {
   background-color: #f87d15; }
 
-.ligue1 td.perf-awful {
+.ligue1 td.perf-awful, .pl td.perf-awful, .liga td.perf-awful {
   background-color: #ff4b04; }
 
-.ligue1 th .fa-circle {
+.ligue1 th .fa-circle, .pl th .fa-circle, .liga th .fa-circle {
   color: #029f50; }
 
-.ligue1 th .fa-circle-thin {
+.ligue1 th .fa-circle-thin, .pl th .fa-circle-thin, .liga th .fa-circle-thin {
   color: #ff4b04; }
 
-.ligue1 td .fa-caret-right {
+.ligue1 td .fa-caret-right, .pl td .fa-caret-right, .liga td .fa-caret-right {
   color: #000000;
   padding-left: 5px;
   font-size: 16px; }
