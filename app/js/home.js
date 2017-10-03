@@ -15,7 +15,9 @@ function getHome() {
                         $('<label/>').attr('for', 'passwordInput').text('Entrez votre mot de passe MPG :'),
                         $('<input/>').addClass('form-control').attr('type', 'password').attr('placeholder', 'Saissisez votre mote de passe MPG').attr('id', 'passwordInput')
                     ),
-                    $('<button/>').addClass('btn btn-primary seconnecter').attr('type', 'submit').text('Se connecter')
+                    $('<div/>').addClass('text-right').append(
+                        $('<button/>').addClass('btn btn-success seconnecter').attr('type', 'submit').text('Se connecter')
+                    )
                 )
             )
         )
@@ -37,7 +39,6 @@ function seConnecter(email, password) {
         },
         dataType: 'json'
     }).done(function(data) {
-        console.log(data);
         Cookies.set('token', data.token, { expires: 7 });
         window.location.href = '?classement';
         // $page.append(data); 

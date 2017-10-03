@@ -22,8 +22,11 @@ body {
   font-family: "Verdana", "Arial";
   font-size: 14px;
   margin: auto;
-  padding-top: 60px;
+  padding: 50px 0;
   color: #333333; }
+
+section {
+  margin: 10px 0; }
 
 img {
   display: inline-block;
@@ -32,6 +35,17 @@ img {
 
 a {
   color: #333333; }
+
+footer {
+  position: fixed;
+  bottom: 0;
+  height: 50px;
+  width: 100%;
+  z-index: 1000;
+  background-color: #45C945;
+  color: #ffffff; }
+  footer p {
+    line-height: 50px; }
 
 header {
   position: fixed;
@@ -55,36 +69,43 @@ header {
         header nav.navbar-default .navbar-toggle:hover .icon-bar, header nav.navbar-default .navbar-toggle:focus .icon-bar {
           background-color: #45C945; }
 
-.classement tbody tr:nth-child(1) {
-  background-color: rgba(2, 159, 80, 0.5); }
-
-.classement tbody tr:nth-child(2) {
-  background-color: rgba(2, 159, 80, 0.3); }
-
-.classement tbody tr:nth-child(3) {
-  background-color: rgba(2, 159, 80, 0.1); }
-
-.classement tbody tr:nth-last-child(1) {
-  background-color: rgba(255, 75, 4, 0.5); }
-
-.classement tbody tr:nth-last-child(2) {
-  background-color: rgba(255, 75, 4, 0.3); }
-
-.classement tbody tr:nth-last-child(3) {
-  background-color: rgba(255, 75, 4, 0.1); }
-
-.classement tbody td.serie span {
-  display: inline-block;
-  border-radius: 50%;
-  width: 10px;
-  height: 10px;
-  margin-right: 5px; }
-  .classement tbody td.serie span.d {
-    background-color: #ff0000; }
-  .classement tbody td.serie span.n {
-    background-color: #ffce04; }
-  .classement tbody td.serie span.v {
-    background-color: #228f60; }
+.classement {
+  margin: 30px 0; }
+  .classement h3 {
+    margin-bottom: 15px; }
+  .classement .table thead th {
+    text-align: center; }
+    .classement .table thead th.equipe {
+      text-align: left;
+      width: 33%; }
+  .classement .table tbody tr:nth-child(1) {
+    background-color: rgba(2, 159, 80, 0.5); }
+  .classement .table tbody tr:nth-child(2) {
+    background-color: rgba(2, 159, 80, 0.3); }
+  .classement .table tbody tr:nth-child(3) {
+    background-color: rgba(2, 159, 80, 0.1); }
+  .classement .table tbody tr:nth-last-child(1) {
+    background-color: rgba(255, 75, 4, 0.5); }
+  .classement .table tbody tr:nth-last-child(2) {
+    background-color: rgba(255, 75, 4, 0.3); }
+  .classement .table tbody tr:nth-last-child(3) {
+    background-color: rgba(255, 75, 4, 0.1); }
+  .classement .table tbody td {
+    text-align: center; }
+    .classement .table tbody td.equipe {
+      text-align: left; }
+    .classement .table tbody td.serie span {
+      display: inline-block;
+      border-radius: 50%;
+      width: 10px;
+      height: 10px;
+      margin-right: 5px; }
+      .classement .table tbody td.serie span.d {
+        background-color: #ff0000; }
+      .classement .table tbody td.serie span.n {
+        background-color: #ffce04; }
+      .classement .table tbody td.serie span.v {
+        background-color: #228f60; }
 
 textarea {
   width: 100%; }

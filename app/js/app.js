@@ -17,17 +17,10 @@ var utils = require('js/utils'),
     teams = [],
     $page = $('.page');
 
-/* Fonctions globales */
-
-function get404() {
-    $page.html(
-        $('<h1/>').text('La page demandée n\'existe pas !')
-    )
-}
-
+/* Fonctions */
 function loadPage() {
     var path = window.location.search,
-        tab = path.split('?')[1].split('&'),
+        tab = (path.length > 0) ? path.split('?')[1].split('&') : [],
         page = tab[0],
         id = tab[1];
 
@@ -38,10 +31,8 @@ function loadPage() {
     );
 
     utils.getTeams();
-    if (page === 'home') {
-        home.getHome();
-    } else if (page === 'classement') {
-        classement.getClassement();
+    if (page === 'classement') {
+        classement.getClassements();
     } else if (page === 'transferts') {
         transferts.getTransferts();
     } else if (page === 'resultats') {
@@ -61,7 +52,7 @@ function loadPage() {
     } else if (page === 'liga') {
         liga.getLiga();
     } else {
-        get404();
+        home.getHome();
     }
     // getHome();
 }

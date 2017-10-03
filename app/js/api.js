@@ -1,48 +1,64 @@
 "use strict";
 
-function getApiClassement() {
+function getApiDashboard() {
 	return $.get({
-    url: "https://api.monpetitgazon.com/league/pVArFY4W1nn/ranking",
+        url: "https://api.monpetitgazon.com/user/dashboard",
+        headers: { "Authorization": Cookies.get('token') }
+	});
+}
+
+function getApiBadge(id) {
+	return $.get({
+        url: "https://api.monpetitgazon.com/user/badges/" + id,
+        headers: { "Authorization": Cookies.get('token') }
+	});
+}
+
+function getApiClassement(tokenLeague) {
+	return $.get({
+    url: "https://api.monpetitgazon.com/league/" + tokenLeague + "/ranking",
     headers: { "Authorization": Cookies.get('token') }
 	});
 }
 
-function getApiMatchParId (id) {
+function getApiMatchParId (tokenLeague, id) {
   return $.get({
-    url: "https://api.monpetitgazon.com/league/pVArFY4W1nn/results/" + id,
+    url: "https://api.monpetitgazon.com/league/" + tokenLeague + "/results/" + id,
     headers: { "Authorization": Cookies.get('token') }
   });
 }
 
-function getApiEffectifs () {
+function getApiEffectifs (tokenLeague) {
 	return $.get({
-    url: "https://api.monpetitgazon.com/league/pVArFY4W1nn/teams",
+    url: "https://api.monpetitgazon.com/league/" + tokenLeague + "/teams",
     headers: { "Authorization": Cookies.get('token') }
 	});
 }
 
-function getApiTransfertsHistorique () {
+function getApiTransfertsHistorique (tokenLeague) {
 	return $.get({
-    url: "https://api.monpetitgazon.com/league/pVArFY4W1nn/transfer/history",
+    url: "https://api.monpetitgazon.com/league/" + tokenLeague + "/transfer/history",
     headers: { "Authorization": Cookies.get('token') }
 	});
 }
 
-function getApiTransfertsAchats () {
+function getApiTransfertsAchats (tokenLeague) {
 	return $.get({
-    url: "https://api.monpetitgazon.com/league/pVArFY4W1nn/transfer/buy",
+    url: "https://api.monpetitgazon.com/league/" + tokenLeague + "/transfer/buy",
     headers: { "Authorization": Cookies.get('token') }
 	});
 }
 
-function getApiListeCotes () {
+function getApiListeCotes (leagueNumber) {
 	return $.get({
-    url: "https://api.monpetitgazon.com/quotation/1",
+    url: "https://api.monpetitgazon.com/quotation/" + leagueNumber,
     headers: { "Authorization": Cookies.get('token') }
 	});
 }
 
 module.exports = {
+  getApiBadge: getApiBadge,
+  getApiDashboard: getApiDashboard,
   getApiClassement: getApiClassement,
   getApiMatchParId: getApiMatchParId,
   getApiEffectifs: getApiEffectifs,

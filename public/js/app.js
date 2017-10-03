@@ -150,49 +150,65 @@ var __makeRelativeRequire = function(require, mappings, pref) {
 require.register("js/api.js", function(exports, require, module) {
 "use strict";
 
-function getApiClassement() {
+function getApiDashboard() {
 	return $.get({
-    url: "https://api.monpetitgazon.com/league/pVArFY4W1nn/ranking",
+        url: "https://api.monpetitgazon.com/user/dashboard",
+        headers: { "Authorization": Cookies.get('token') }
+	});
+}
+
+function getApiBadge(id) {
+	return $.get({
+        url: "https://api.monpetitgazon.com/user/badges/" + id,
+        headers: { "Authorization": Cookies.get('token') }
+	});
+}
+
+function getApiClassement(tokenLeague) {
+	return $.get({
+    url: "https://api.monpetitgazon.com/league/" + tokenLeague + "/ranking",
     headers: { "Authorization": Cookies.get('token') }
 	});
 }
 
-function getApiMatchParId (id) {
+function getApiMatchParId (tokenLeague, id) {
   return $.get({
-    url: "https://api.monpetitgazon.com/league/pVArFY4W1nn/results/" + id,
+    url: "https://api.monpetitgazon.com/league/" + tokenLeague + "/results/" + id,
     headers: { "Authorization": Cookies.get('token') }
   });
 }
 
-function getApiEffectifs () {
+function getApiEffectifs (tokenLeague) {
 	return $.get({
-    url: "https://api.monpetitgazon.com/league/pVArFY4W1nn/teams",
+    url: "https://api.monpetitgazon.com/league/" + tokenLeague + "/teams",
     headers: { "Authorization": Cookies.get('token') }
 	});
 }
 
-function getApiTransfertsHistorique () {
+function getApiTransfertsHistorique (tokenLeague) {
 	return $.get({
-    url: "https://api.monpetitgazon.com/league/pVArFY4W1nn/transfer/history",
+    url: "https://api.monpetitgazon.com/league/" + tokenLeague + "/transfer/history",
     headers: { "Authorization": Cookies.get('token') }
 	});
 }
 
-function getApiTransfertsAchats () {
+function getApiTransfertsAchats (tokenLeague) {
 	return $.get({
-    url: "https://api.monpetitgazon.com/league/pVArFY4W1nn/transfer/buy",
+    url: "https://api.monpetitgazon.com/league/" + tokenLeague + "/transfer/buy",
     headers: { "Authorization": Cookies.get('token') }
 	});
 }
 
-function getApiListeCotes () {
+function getApiListeCotes (leagueNumber) {
 	return $.get({
-    url: "https://api.monpetitgazon.com/quotation/1",
+    url: "https://api.monpetitgazon.com/quotation/" + leagueNumber,
     headers: { "Authorization": Cookies.get('token') }
 	});
 }
 
 module.exports = {
+  getApiBadge: getApiBadge,
+  getApiDashboard: getApiDashboard,
   getApiClassement: getApiClassement,
   getApiMatchParId: getApiMatchParId,
   getApiEffectifs: getApiEffectifs,
@@ -222,17 +238,10 @@ var utils = require('js/utils'),
     teams = [],
     $page = $('.page');
 
-/* Fonctions globales */
-
-function get404() {
-    $page.html(
-        $('<h1/>').text('La page demandée n\'existe pas !')
-    )
-}
-
+/* Fonctions */
 function loadPage() {
     var path = window.location.search,
-        tab = path.split('?')[1].split('&'),
+        tab = (path.length > 0) ? path.split('?')[1].split('&') : [],
         page = tab[0],
         id = tab[1];
 
@@ -243,10 +252,8 @@ function loadPage() {
     );
 
     utils.getTeams();
-    if (page === 'home') {
-        home.getHome();
-    } else if (page === 'classement') {
-        classement.getClassement();
+    if (page === 'classement') {
+        classement.getClassements();
     } else if (page === 'transferts') {
         transferts.getTransferts();
     } else if (page === 'resultats') {
@@ -266,7 +273,7 @@ function loadPage() {
     } else if (page === 'liga') {
         liga.getLiga();
     } else {
-        get404();
+        home.getHome();
     }
     // getHome();
 }
@@ -277,77 +284,160 @@ loadPage();
 require.register("js/classement.js", function(exports, require, module) {
 "use strict";
 
-var $page = $('.page');
+var api = require('js/api');
+    
+var $page = $('.page'),
+    classementTotal = {},
+    user = 0,
+    l,
+    nomLeagues = [],
+    tabPromessesLeagues = [],
+    listePromessesLeague,
+    i,
+    j,
+    p,
+    s,
+    classement,
+    clubs,
+    $tableau,
+    i,
+    donnees,
+    $ligne,
+    serie,
+    equipe;
 
-function getClassement() {
-    $.get({
-        url: "https://api.monpetitgazon.com/league/pVArFY4W1nn/ranking",
-        headers: { "Authorization": Cookies.get('token') }
-    }).done(function(data) {
-        var classement = (data) ? data.ranking : null,
-            clubs = (data) ? data.teams : null,
-            $tableau,
-            i,
-            j,
-            s,
-            donnees,
-            $ligne,
-            serie,
-            equipe;
+function getClassements() {
+    $.when(api.getApiDashboard()).then(function(args){
+        for(l of args.data.leagues) {
+            tabPromessesLeagues.push(l.id);
+            nomLeagues.push(l.name);
+        }
+        listePromessesLeague = tabPromessesLeagues.map(api.getApiClassement);
+        
+        $.when.apply($, listePromessesLeague).then(function(){
+            for(p = 0; p < listePromessesLeague.length; ++p) {
+                $tableau = $('<div/>').addClass('classement').append(
+                    $('<h3/>').addClass('').text(nomLeagues[p]),
+                    $('<table/>').addClass('table').append(
+                        $('<thead/>').append(
+                            $('<tr/>').append(
+                                $('<th/>'),
+                                $('<th/>').addClass('equipe').text('Equipe'),
+                                $('<th/>').text('Série'),
+                                $('<th/>').text('J'),
+                                $('<th/>').text('G'),
+                                $('<th/>').text('N'),
+                                $('<th/>').text('P'),
+                                $('<th/>').text('Bp'),
+                                $('<th/>').text('Bc'),
+                                $('<th/>').text('Diff'),
+                                $('<th/>').text('Pts')
+                            )
+                        ),
+                        $('<tbody/>')
+                    )
+                );
+                classement = (arguments[p]) ? arguments[p][0].ranking : null,
+                clubs = (arguments[p]) ? arguments[p][0].teams : null;
+                
+                if(classement != null) {
+                    for (i = 0; i < classement.length; i += 1) {
+                        donnees = classement[i];
+                        $ligne = $('<tr/>');
 
-        $tableau = $('<table/>').addClass('table classement').append(
-            $('<thead/>').append(
-                $('<tr/>').append(
-                    $('<th/>'),
-                    $('<th/>').text('Equipe'),
-                    $('<th/>').text('Série'),
-                    $('<th/>').text('J'),
-                    $('<th/>').text('G'),
-                    $('<th/>').text('N'),
-                    $('<th/>').text('P'),
-                    $('<th/>').text('Bp'),
-                    $('<th/>').text('Bc'),
-                    $('<th/>').text('Diff'),
-                    $('<th/>').text('Pts')
-                )
-            ),
-            $('<tbody/>')
-        );
+                        for (equipe in donnees) {                            
+                            if (donnees.hasOwnProperty(equipe)) {
+                                if (equipe === 'teamid') {
+                                    $ligne.append($('<td/>').addClass('equipe').text(clubs[donnees[equipe]].name));
+                                } else if (equipe === 'rank') {
+                                    $ligne.prepend($('<td/>').text(donnees[equipe]));
+                                }  else if (equipe === 'series') {
+                                    $ligne.append($('<td/>').addClass('serie'));
+                                    serie = donnees[equipe].split("");
 
-        if(classement != null) {
-            for (i = 0; i < classement.length; i += 1) {
-                donnees = classement[i];
-                $ligne = $('<tr/>');
-
-                for (equipe in donnees) {
-                    if (donnees.hasOwnProperty(equipe)) {
-                        if (equipe === 'teamid') {
-                            $ligne.append($('<td/>').text(clubs[donnees[equipe]].name));
-                        } else if (equipe === 'rank') {
-                            $ligne.prepend($('<td/>').text(donnees[equipe]));
-                        }  else if (equipe === 'series') {
-                            $ligne.append($('<td/>').addClass('serie'));
-                            serie = donnees[equipe].split("");
-                            
-                            for(s in serie) {
-                                $ligne.find('.serie').append($('<span/>').addClass(serie[s]));
+                                    for(s in serie) {
+                                        $ligne.find('.serie').append($('<span/>').addClass(serie[s]));
+                                    }
+                                } else {
+                                    $ligne.append($('<td/>').text(donnees[equipe]));
+                                }
                             }
-                            
-                        } else {
-                            $ligne.append($('<td/>').text(donnees[equipe]));
                         }
+                        user = donnees.teamid.split('_')[4];
+                        classementTotal[user] = {
+                            user: user,
+                            played: (classementTotal[user]) ? donnees.played + classementTotal[user].played : donnees.played,
+                            victory: (classementTotal[user]) ? donnees.victory + classementTotal[user].victory : donnees.victory,
+                            draw: (classementTotal[user]) ? donnees.draw + classementTotal[user].draw : donnees.draw,
+                            defeat: (classementTotal[user]) ? donnees.defeat + classementTotal[user].defeat : donnees.defeat,
+                            goal: (classementTotal[user]) ? donnees.goal + classementTotal[user].goal : donnees.goal,
+                            goalconceded: (classementTotal[user]) ? donnees.goalconceded + classementTotal[user].goalconceded : donnees.goalconceded,
+                            difference: (classementTotal[user]) ? donnees.difference + classementTotal[user].difference : donnees.difference,
+                            points: (classementTotal[user]) ? donnees.points + classementTotal[user].points : donnees.points
+                        }
+                        $tableau.find('tbody').append($ligne);
                     }
                 }
-                $tableau.append($ligne);
+                if(p == 0)
+                    $page.html($tableau);
+                else
+                    $page.append($tableau);
             }
-        }
-        $page.html($tableau);
-        $tableau.bootstrapTable();
+            $('.table').bootstrapTable();
+            classement = Object.values(classementTotal);
+            classement.sort(function (a, b) {
+                return b.points - a.points;
+            });
+            
+            $tableau = $('<div/>').addClass('classement').append(
+                $('<h3/>').addClass('').text('Classement général'),
+                $('<table/>').addClass('table').append(
+                    $('<thead/>').append(
+                        $('<tr/>').append(
+                            $('<th/>'),
+                            $('<th/>').addClass('equipe').text('Equipe'),
+                            $('<th/>').text('J'),
+                            $('<th/>').text('G'),
+                            $('<th/>').text('N'),
+                            $('<th/>').text('P'),
+                            $('<th/>').text('Bp'),
+                            $('<th/>').text('Bc'),
+                            $('<th/>').text('Diff'),
+                            $('<th/>').text('Pts')
+                        )
+                    ),
+                    $('<tbody/>')
+                )
+            );
+            j = 1;
+            for (i in classement) {
+                donnees = classement[i];
+                $ligne = $('<tr/>');
+                
+                for (equipe in donnees) {                            
+                    if (donnees.hasOwnProperty(equipe)) {
+                        if(equipe === 'user') {
+                            user = donnees.user;
+                            $ligne.prepend($('<td/>').text(j));
+                            $ligne.append($('<td/>').addClass('equipe user_' + user));
+                            $.when(api.getApiBadge(user)).then(function(args){
+                                $('.user_' + this.url.split('/')[5]).text(args.firstname);
+                            });
+                        } else
+                            $ligne.append($('<td/>').text(donnees[equipe]));
+                    }
+                }
+                j++;
+                $tableau.find('tbody').append($ligne);
+            }
+            
+            $page.prepend($tableau);
+        });
     });
 }
 
 module.exports = {
-    getClassement: getClassement
+    getClassements: getClassements
 }
 });
 
@@ -448,7 +538,9 @@ function getHome() {
                         $('<label/>').attr('for', 'passwordInput').text('Entrez votre mot de passe MPG :'),
                         $('<input/>').addClass('form-control').attr('type', 'password').attr('placeholder', 'Saissisez votre mote de passe MPG').attr('id', 'passwordInput')
                     ),
-                    $('<button/>').addClass('btn btn-primary seconnecter').attr('type', 'submit').text('Se connecter')
+                    $('<div/>').addClass('text-right').append(
+                        $('<button/>').addClass('btn btn-success seconnecter').attr('type', 'submit').text('Se connecter')
+                    )
                 )
             )
         )
@@ -470,7 +562,6 @@ function seConnecter(email, password) {
         },
         dataType: 'json'
     }).done(function(data) {
-        console.log(data);
         Cookies.set('token', data.token, { expires: 7 });
         window.location.href = '?classement';
         // $page.append(data); 

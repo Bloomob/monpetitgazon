@@ -25,8 +25,12 @@ body {
     font-family: "Verdana", "Arial";
     font-size: 14px;
     margin: auto;
-    padding-top: 60px;
+    padding: 50px 0;
     color: $noir2;
+}
+
+section {
+    margin: 10px 0;
 }
 
 img {
@@ -37,4 +41,18 @@ img {
 
 a {
     color: $noir2;
+}
+
+footer {
+	position: fixed;
+	bottom: 0;
+	height: 50px;
+	width: 100%;
+	z-index: 1000;
+	background-color: $vert-clair;
+    color: $blanc;
+    
+    p {
+        line-height: 50px;
+    }
 }
