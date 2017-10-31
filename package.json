@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "devDependencies": {
-    "brunch": "^2.4.2",
-    "javascript-brunch": "^2.0.0",
-    "css-brunch": "^2.6.1",
-    "sass-brunch": "^2.0.0",
     "browser-sync-brunch": "^0.0.9",
+    "brunch": "^2.10.11",
+    "css-brunch": "^2.6.1",
+    "javascript-brunch": "^2.0.0",
+    "sass-brunch": "^2.0.0",
     "uglify-js-brunch": "^2.0.1"
   }
 }
