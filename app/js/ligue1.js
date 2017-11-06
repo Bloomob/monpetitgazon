@@ -7,7 +7,6 @@ function getLigue1() {
     var journee = 0,
         derniereJournee = 0,
         effectifs,
-        tab = [],
         tabPromessesMatchParJournee = [],
         tabPromessesDetailsParId = [],
         tabJournee = [],
@@ -21,7 +20,6 @@ function getLigue1() {
         j_home,
         j_away,
         listeJoueurs,
-        listeNotes,
         equipe,
         result,
         titu,
@@ -36,7 +34,7 @@ function getLigue1() {
         k,
         $ligneHead,
         $ligne;
-    
+
     function getListeMatchParJournee (i) {
         return $.get({
             url: "https://api.monpetitgazon.com/championship/1/calendar/" + i,
@@ -50,14 +48,14 @@ function getLigue1() {
             headers: { "Authorization": Cookies.get('token') }
         });
     }
-    
+
     function getDerniereJournee () {
         return $.get({
             url: "https://api.monpetitgazon.com/championship/1/calendar/",
             headers: { "Authorization": Cookies.get('token') }
         });
     }
-    
+
     function getEffectif () {
         return $.get({
             url: "https://api.monpetitgazon.com/league/pVArFY4W1nn/teams",
@@ -70,7 +68,7 @@ function getLigue1() {
     }
 
     function trouverEquipe (myArray, value) {
-         for (var i in myArray) {
+        for (var i in myArray) {
             for (var j in myArray[i].players) {
                 if (myArray[i].players[j].id === 'player_' + value) {
                     return { nom: myArray[i].name, poste: myArray[i].players[j].position };
@@ -85,7 +83,7 @@ function getLigue1() {
         }
         listePromessesMatchParJournee = tabPromessesMatchParJournee.map(getListeMatchParJournee);
     }
-
+    /*
     function loadLiguePage(listeNotes, effectifs) {
         $page.html(
             $('<table/>').addClass('table ligue1').attr('data-sort-name', 'joueur').attr('data-toggle', 'table').append(
@@ -108,7 +106,8 @@ function getLigue1() {
             $('<th/>').attr('data-sortable', true).attr('data-field', 'remplacants').append(
                 $('<i/>').addClass('fa fa-circle-thin').attr('aria-hidden', true)
             ),
-            $('<th/>').attr('data-sortable', true).attr('data-field', 'moyenne').text('Moy.')
+            $('<th/>').attr('data-sortable', true).attr('data-field', 'moyenne').text('Moy.'),
+            $('<th/>').attr('data-sortable', true).attr('data-field', 'moyenne').text('Moy. Red')
         );
 
         for (i = 0; i < listeJournees.length; i += 1) {
@@ -190,7 +189,8 @@ function getLigue1() {
             showColumns: true
         });
     }
-    
+    */
+
     function failPromessesMatchParJournee () {
         console.log('Une erreur est survenue');
     }
@@ -220,7 +220,7 @@ function getLigue1() {
             tabPromessesMatchParJournee.push(i);
         }
         listePromessesMatchParJournee = tabPromessesMatchParJournee.map(getListeMatchParJournee);
-        
+
         $.when.apply($, listePromessesMatchParJournee).then(function(){
             for(i = 0; i < tabPromessesMatchParJournee.length; ++i) {
                 if(arguments[i].day != undefined) {
@@ -231,10 +231,10 @@ function getLigue1() {
                     matchs = arguments[i][0].matches;
                 }
                 listeJournees.push(journee);
-                
+
                 for(j in matchs) {
                     if (matchs.hasOwnProperty(j)) {
-                        
+
                         if(matchs[j].home.score !== undefined && matchs[j].home.score !== '') {
                             tabPromessesDetailsParId.push(matchs[j].id);
                             tabJournee.push(journee);
@@ -242,13 +242,13 @@ function getLigue1() {
                     }
                 }
             }
-            
+
             listePromessesDetailsParId = tabPromessesDetailsParId.map(getDetailsMatchParId);
-            
+
             $.when.apply($, listePromessesDetailsParId).then(function(){
                 for(i = 0; i < tabPromessesDetailsParId.length; ++i) {
                     journee = tabJournee[i];
-                    
+
                     if(arguments[i].length > 0) {
                         eq_home = arguments[i][0].Home.club;
                         eq_away = arguments[i][0].Away.club;
@@ -297,6 +297,9 @@ function getLigue1() {
                                             journee: journee,
                                             sub: sub
                                         }
+                                    ],
+                                    tabNotes: [
+                                        listeJoueurs[j].info.note_final_2015
                                     ]
                                 };
                                 listeNotes.push(joueur);
@@ -312,6 +315,9 @@ function getLigue1() {
                                         journee: journee,
                                         sub: sub
                                     }
+                                );
+                                listeNotes[index].tabNotes.push(
+                                    listeJoueurs[j].info.note_final_2015
                                 );
                                 // console.log(result);
                             }
@@ -340,7 +346,9 @@ function getLigue1() {
                     $('<th/>').attr('data-sortable', true).attr('data-field', 'remplacants').append(
                         $('<i/>').addClass('fa fa-circle-thin').attr('aria-hidden', true)
                     ),
-                    $('<th/>').attr('data-sortable', true).attr('data-field', 'moyenne').text('Moy.')
+                    $('<th/>').attr('data-sortable', true).attr('data-field', 'moyenne').attr('title', 'Moyenne').text('Moy.'),
+                    $('<th/>').attr('data-sortable', true).attr('data-field', 'moyenne-reduite').attr('title', 'Moyenne réduite').text('M.Red'),
+                    $('<th/>').attr('data-sortable', true).attr('data-field', 'moyenne-5-derniers-matchs').attr('title', 'Moyenne des 5 derniers matchs').text('M.5DM')
                 );
 
                 for (i = 0; i < listeJournees.length; i += 1) {
@@ -364,35 +372,49 @@ function getLigue1() {
                         notes = listeNotes[i].notes;
 
                         moyenne = Math.round(listeNotes[i].somme / notes.length * 100) / 100;
-
-                        if (moyenne >= 7) {
-                            noteClass = 'perf-top';
-                        } else if (moyenne >= 6) {
-                            noteClass = 'perf-good';
-                        } else if (moyenne >= 5) {
-                            noteClass = 'perf-normal';
-                        } else if (moyenne >= 4) {
-                            noteClass = 'perf-bad';
-                        } else if (moyenne < 4) {
-                            noteClass = 'perf-awful';
-                        }
-
+                        var noteClass = utils.classNote(moyenne);
                         $ligne.append($('<td/>').addClass(noteClass).text(moyenne));
+
+                        // Pour la moyenne réduite :
+                        listeNotes[i].tabNotes.sort(function compareNombres(a, b) {
+                            return a - b;
+                        });
+                        var coeff = listeNotes[i].tabNotes.length * 0.3;
+                        var nbrARetirer = Math.floor(coeff / 2) * 2;
+                        listeNotes[i].tabNotes.splice(0, nbrARetirer/2);
+                        listeNotes[i].tabNotes.splice(-nbrARetirer/2, nbrARetirer/2);
+                        var somme = listeNotes[i].tabNotes.reduce(function(a, b) {
+                            return a + b;
+                        }, 0);
+                        moyenne = Math.round(somme / listeNotes[i].tabNotes.length * 100) / 100;
+                        var noteClass = utils.classNote(moyenne);
+                        $ligne.append($('<td/>').addClass(noteClass).text(moyenne));
+
+                        k = notes.length - 1;
+                        var tabNotes = [];
+                        for (j = listeJournees.length - 1; j >= 0; j--) {
+                            if (notes[k] !== undefined) {
+                                if (listeJournees[j] === notes[k].journee) {
+                                    tabNotes.push(notes[k].note);
+                                    if(tabNotes.length > 4) {
+                                        break;
+                                    }
+                                    k--;
+                                }
+                            }
+                        }
+                        var somme = tabNotes.reduce(function(a, b) {
+                            return a + b;
+                        }, 0);
+                        moyenne = Math.round(somme / tabNotes.length * 100) / 100;
+                        var noteClass = utils.classNote(moyenne);
+                        $ligne.append($('<td/>').addClass(noteClass).text(moyenne));
+
                         k = 0;
                         for (j = 0; j < listeJournees.length; j += 1) {
                             if (notes[k] !== undefined) {
                                 if (listeJournees[j] === notes[k].journee) {
-                                    if (notes[k].note >= 7) {
-                                        noteClass = 'perf-top';
-                                    } else if (notes[k].note >= 6) {
-                                        noteClass = 'perf-good';
-                                    } else if (notes[k].note >= 5) {
-                                        noteClass = 'perf-normal';
-                                    } else if (notes[k].note >= 4) {
-                                        noteClass = 'perf-bad';
-                                    } else if (notes[k].note < 4) {
-                                        noteClass = 'perf-awful';
-                                    }
+                                    var noteClass = utils.classNote(notes[k].note);
 
                                     if (notes[k].sub) {
                                         $ligne.append($('<td/>').addClass(noteClass).append(

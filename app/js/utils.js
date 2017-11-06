@@ -18,7 +18,7 @@ function fontAwesomeIcon(nom) {
     return $('<i/>').addClass('fa fa-' + nom).attr('aria-hidden', 'true');
 }
 
-function classNote (note) {
+function classNote(note) {
     if (note >= 7) {
         return 'perf-top';
     } else if (note >= 6) {
