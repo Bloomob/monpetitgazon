@@ -131,6 +131,12 @@ textarea {
 .ligue1 th .fa-circle-thin, .pl th .fa-circle-thin, .liga th .fa-circle-thin {
   color: #ff4b04; }
 
+.ligue1 th .fa.goal, .pl th .fa.goal, .liga th .fa.goal {
+  color: #029f50; }
+
+.ligue1 th .fa.assist, .pl th .fa.assist, .liga th .fa.assist {
+  color: #0397d7; }
+
 .ligue1 td .fa-caret-right, .pl td .fa-caret-right, .liga td .fa-caret-right {
   color: #000000;
   padding-left: 5px;

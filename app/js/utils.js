@@ -1,12 +1,12 @@
 "use strict";
 
 var postes = [
-        'Aucun',
-        'Gardien',
-        'Défenseur',
-        'Milieu',
-        'Attaquant'
-    ],
+    'Aucun',
+    'Gardien',
+    'Défenseur',
+    'Milieu',
+    'Attaquant'
+],
     teams = [],
     now;
 
@@ -42,7 +42,8 @@ function getStorage (key) {
 
 function setStorage (key, value) {
     var expires = new Date();
-    expires.setDate(expires.getDay() + 1);
+    expires.setDate(expires.getDay() + 7);
+
     localStorage.setItem(key, JSON.stringify({value: value, expires: expires}));
 }
 

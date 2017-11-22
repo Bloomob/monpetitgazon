@@ -61,24 +61,22 @@ function getClassements() {
                         donnees = classement[i];
                         $ligne = $('<tr/>');
 
-                        for (equipe in donnees) {                            
-                            if (donnees.hasOwnProperty(equipe)) {
-                                if (equipe === 'teamid') {
-                                    $ligne.append($('<td/>').addClass('equipe').text(clubs[donnees[equipe]].name));
-                                } else if (equipe === 'rank') {
-                                    $ligne.prepend($('<td/>').text(donnees[equipe]));
-                                }  else if (equipe === 'series') {
-                                    $ligne.append($('<td/>').addClass('serie'));
-                                    serie = donnees[equipe].split("");
-
-                                    for(s in serie) {
-                                        $ligne.find('.serie').append($('<span/>').addClass(serie[s]));
-                                    }
-                                } else {
-                                    $ligne.append($('<td/>').text(donnees[equipe]));
-                                }
-                            }
+                        $ligne.append($('<td/>').text(donnees['rank']));
+                        $ligne.append($('<td/>').addClass('equipe').text(clubs[donnees['teamid']].name));
+                        $ligne.append($('<td/>').addClass('serie'));
+                        serie = donnees['series'].split("");
+                        for(s in serie) {
+                            $ligne.find('.serie').append($('<span/>').addClass(serie[s]));
                         }
+                        $ligne.append($('<td/>').text(donnees['played']));
+                        $ligne.append($('<td/>').text(donnees['victory']));
+                        $ligne.append($('<td/>').text(donnees['draw']));
+                        $ligne.append($('<td/>').text(donnees['defeat']));
+                        $ligne.append($('<td/>').text(donnees['goal']));
+                        $ligne.append($('<td/>').text(donnees['goalconceded']));
+                        $ligne.append($('<td/>').text(donnees['difference']));
+                        $ligne.append($('<td/>').text(donnees['points']));
+                        
                         user = donnees.teamid.split('_')[4];
                         classementTotal[user] = {
                             user: user,

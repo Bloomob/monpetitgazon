@@ -92,6 +92,12 @@ textarea {
         .fa-circle-thin {
             color: $rouge;
         }
+        .fa.goal {
+            color: $vert;
+        }
+        .fa.assist {
+            color: $bleu-clair;
+        }
     }
     td {
         .fa-caret-right {
