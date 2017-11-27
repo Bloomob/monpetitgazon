@@ -255,6 +255,7 @@ module.exports = {
 "use strict";
 
 var utils = require('js/utils'),
+    api = require('js/api'),
     home = require('js/home'),
     resultats = require('js/resultats'),
     transferts = require('js/transferts'),
@@ -262,21 +263,25 @@ var utils = require('js/utils'),
     statistiques = require('js/statistiques'),
     classement = require('js/classement'),
     effectifs = require('js/effectifs'),
+    championnat = require('js/championnat'),
     ligue1 = require('js/ligue1'),
     pl = require('js/pl'),
     liga = require('js/liga'),
     match = require('js/match'),
 
     /* Variables gloables */
+    l,
+    ligne,
     teams = [],
     $page = $('.page');
 
-/* Fonctions */
+/* Fonction au chargement de la page */
 function loadPage() {
     var path = window.location.search,
         tab = (path.length > 0) ? path.split('?')[1].split('&') : [],
-        page = tab[0],
-        id = tab[1];
+        argument1 = tab[0],
+        argument2 = tab[1],
+        argument3 = tab[2];
 
     $page.append(
         $('<div/>').addClass('text-center text-success').append(
@@ -284,31 +289,63 @@ function loadPage() {
         )
     );
 
-    utils.getTeams();
-    if (page === 'classement') {
-        classement.getClassements();
-    } else if (page === 'transferts') {
-        transferts.getTransferts();
-    } else if (page === 'resultats') {
-        resultats.getResultats();
-    } else if (page === 'live') {
-        live.getLive();
-    } else if (page === 'statistiques') {
-        statistiques.getStatistiques();
-    } else if (page === 'equipes') {
-        effectifs.getEffectifs();
-    } else if (page === 'match') {
-        match.getMatch(id);
-    } else if (page === 'ligue1') {
-        ligue1.getLigue1();
-    } else if (page === 'pl') {
-        pl.getPl();
-    } else if (page === 'liga') {
-        liga.getLiga();
-    } else {
-        home.getHome();
-    }
-    // getHome();
+    $.when(api.getApiDashboard()).then(function(args) {
+        utils.setStorage('ligues', args.data.leagues);
+        
+        for(var l of args.data.leagues) {
+            if(l.championship == 1) {
+                ligne = $('<li/>').append(
+                    $('<a/>').attr('href', "?championnat&" + l.championship + "&" + l.id).append(
+                        $('<img/>').attr('src', "images/flag-france.png").attr('alt', l.name).addClass('icones'),
+                        l.name
+                    )
+                );
+            } else if(l.championship == 2) {
+                ligne = $('<li/>').append(
+                    $('<a/>').attr('href', "?championnat&" + l.championship + "&" + l.id).append(
+                        $('<img/>').attr('src', "images/flag-angleterre.png").attr('alt', l.name).addClass('icones'),
+                        l.name
+                    )
+                );
+            } else {
+                ligne = $('<li/>').append(
+                    $('<a/>').attr('href', "?championnat&" + l.championship + "&" + l.id).append(
+                        $('<img/>').attr('src', "images/flag-espagne.png").attr('alt', l.name).addClass('icones'),
+                        l.name
+                    )
+                );
+            }
+            $('ul.liste-championnats').append(ligne);
+        }
+        
+        if (argument1 === 'classement') {
+            classement.getClassements();
+        } else if (argument1 === 'transferts') {
+            transferts.getTransferts();
+        } else if (argument1 === 'resultats') {
+            resultats.getResultats();
+        } else if (argument1 === 'live') {
+            live.getLive();
+        } else if (argument1 === 'statistiques') {
+            statistiques.getStatistiques();
+        } else if (argument1 === 'equipes') {
+            effectifs.getEffectifs();
+        } else if (argument1 === 'match') {
+            match.getMatch(argument2);
+        } else if (argument1 === 'championnat') {
+            utils.setStorage('championnat', argument2);
+            utils.setStorage('league', argument3);
+            championnat.getChampionnat();
+        } else if (argument1 === 'ligue1') {
+            ligue1.getLigue1();
+        } else if (argument1 === 'pl') {
+            pl.getPl();
+        } else if (argument1 === 'liga') {
+            liga.getLiga();
+        } else {
+            home.getHome();
+        }
+    });
 }
 
 loadPage();
@@ -370,11 +407,358 @@ module.exports = {
 }
 });
 
+;require.register("js/championnat.js", function(exports, require, module) {
+"use strict";
+
+var utils = require('js/utils'),
+    api = require('js/api'),
+    bdd = require('js/bdd'),
+    $page = $('.page');
+
+function getChampionnat() {
+    var journee = 0,
+        derniereJournee = 0,
+        effectifs,
+        joueurs,
+        tabPromessesMatchParJournee = [],
+        tabPromessesDetailsParId = [],
+        tabJournee = [],
+        listeJournees = [],
+        listeNotes = [],
+        listePromessesMatchParJournee,
+        listePromessesDetailsParId,
+        matchs,
+        eq_home,
+        eq_away,
+        j_home,
+        j_away,
+        listeJoueurs,
+        equipe,
+        result,
+        titu,
+        sub,
+        joueur,
+        index,
+        notes,
+        moyenne,
+        noteClass,
+        i,
+        j,
+        k,
+        $ligneHead,
+        $ligne;
+
+    function compare(e) {
+        return e.id === j;
+    }
+
+    function trouverEquipe (myArray, value) {
+        for (var i in myArray) {
+            for (var j in myArray[i].players) {
+                if (myArray[i].players[j].id === 'player_' + value) {
+                    return { nom: myArray[i].name, poste: myArray[i].players[j].position };
+                }
+            }
+        }
+    }
+
+    function getInfosJoueurs (myArray, value) {
+        for (var i in myArray) {
+            if (myArray[i].id === 'player_' + value) {
+                return { 
+                    prenom: (myArray[i].firstname !== null) ? myArray[i].firstname : '',
+                    nom: myArray[i].lastname,
+                    poste: myArray[i].position
+                };
+            }
+        }
+    }
+
+    function failPromessesMatchParJournee () {
+        console.log('Une erreur est survenue');
+    }
+
+    function listeMatchsParJournee(args) {
+        for(i = 0; i < derniereJournee; ++i) {
+            if(args[i].day != undefined) {
+                journee = args[i].day;
+                matchs = args[i].matches;
+            } else {
+                journee = args[i][0].day;
+                matchs = args[i][0].matches;
+            }
+            listeJournees.push(journee);
+
+            for(j in matchs) {
+                if (matchs.hasOwnProperty(j)) {
+                    if(matchs[j].home.score !== undefined && matchs[j].home.score !== '') {
+                        tabPromessesDetailsParId.push(matchs[j].id);
+                        tabJournee.push(journee);
+                    }
+                }
+            }
+        }
+        /*if(utils.getStorage('matchs') != null) {
+            detailsMatchParId(utils.getStorage('matchs').value);
+        } else {*/
+            listePromessesDetailsParId = tabPromessesDetailsParId.map(api.getApiDetailsMatchParId);
+
+            $.when.apply($, listePromessesDetailsParId).then(function() {
+                /*for(i = 0; i < tabPromessesDetailsParId.length; ++i) {
+                    utils.setStorage('matchs_' + tabPromessesDetailsParId[i], arguments[i]);
+                }*/
+                detailsMatchParId(arguments);
+            });
+        // }
+    }
+
+    function detailsMatchParId(args) {
+        for(i = 0; i < tabPromessesDetailsParId.length; ++i) {
+            journee = tabJournee[i];
+
+            if(args[i].length > 0) {
+                eq_home = args[i][0].Home.club;
+                eq_away = args[i][0].Away.club;
+                j_home = args[i][0].Home.players;
+                j_away = args[i][0].Away.players;
+            } else {
+                eq_home = args[i].Home.club;
+                eq_away = args[i].Away.club;
+                j_home = args[i].Home.players;
+                j_away = args[i].Away.players;
+            }
+            listeJoueurs = Object.assign(j_home, j_away);
+
+            for (j in listeJoueurs) {
+                if (listeJoueurs.hasOwnProperty(j)) {
+                    result = $.grep(listeNotes, compare);
+
+                    if (j_away.hasOwnProperty(j)) {
+                        equipe = eq_away;
+                    } else {
+                        equipe = eq_home;
+                    }
+
+                    if (listeJoueurs[j].info.sub) {
+                        titu = 0;
+                        sub = 1;
+                    } else {
+                        titu = 1;
+                        sub = 0;
+                    }
+
+                    // console.log(listeJoueurs[j].info);
+
+                    if (result.length === 0) {
+                        joueur = {
+                            id: j,
+                            nom: listeJoueurs[j].info.lastname,
+                            equipe: equipe,
+                            somme: listeJoueurs[j].info.note_final_2015,
+                            buts: listeJoueurs[j].info.goals,
+                            passe_dec: (listeJoueurs[j].stat.goal_assist !== undefined) ? listeJoueurs[j].stat.goal_assist : 0,
+                            titulaires: titu,
+                            remplacants: sub,
+                            notes: [
+                                {
+                                    note: listeJoueurs[j].info.note_final_2015,
+                                    journee: journee,
+                                    sub: sub
+                                }
+                            ],
+                            tabNotes: [
+                                listeJoueurs[j].info.note_final_2015
+                            ]
+                        };
+                        listeNotes.push(joueur);
+                    } else {
+                        index = listeNotes.indexOf(result[0]);
+                        listeNotes[index].buts += listeJoueurs[j].info.goals;
+                        listeNotes[index].passe_dec += (listeJoueurs[j].stat.goal_assist !== undefined) ? listeJoueurs[j].stat.goal_assist : 0;
+                        listeNotes[index].somme += listeJoueurs[j].info.note_final_2015;
+                        listeNotes[index].titulaires += titu;
+                        listeNotes[index].remplacants += sub;
+                        listeNotes[index].notes.push(
+                            {
+                                note: listeJoueurs[j].info.note_final_2015,
+                                journee: journee,
+                                sub: sub
+                            }
+                        );
+                        listeNotes[index].tabNotes.push(
+                            listeJoueurs[j].info.note_final_2015
+                        );
+                        // console.log(result);
+                    }
+                }
+            }
+        }
+
+        $('.page').html(
+            $('<table/>').addClass('table ligue1').attr('data-sort-name', 'joueur').attr('data-toggle', 'table').attr('data-filter-control', 'true').attr('data-filter-show-clear', 'true').attr('data-page-size', '50').append(
+                $('<thead/>'),
+                $('<tbody/>')
+            )
+        );
+
+        $ligneHead = $('<tr/>').append(
+            $('<th/>').attr('data-sortable', true).attr('data-field', 'joueur').text('Joueur'),
+            $('<th/>').attr('data-sortable', true).attr('data-filter-control', 'select').attr('data-field', 'position').text('Position'),
+            $('<th/>').attr('data-sortable', true).attr('data-filter-control', 'select').attr('data-field', 'proprietaire').text('Propriétaire'),
+            $('<th/>').attr('data-sortable', true).attr('data-filter-control', 'select').attr('data-field', 'equipe').text('Equipe'),
+            $('<th/>').attr('data-sortable', true).attr('data-field', 'buts').append(
+                $('<i/>').addClass('fa fa-futbol-o goal').attr('aria-hidden', true)
+            ),
+            $('<th/>').attr('data-sortable', true).attr('data-field', 'passe-dec').append(
+                $('<i/>').addClass('fa fa-futbol-o assist').attr('aria-hidden', true)
+            ),
+            $('<th/>').attr('data-sortable', true).attr('data-field', 'titulaires').append(
+                $('<i/>').addClass('fa fa-circle').attr('aria-hidden', true)
+            ),
+            $('<th/>').attr('data-sortable', true).attr('data-field', 'remplacants').append(
+                $('<i/>').addClass('fa fa-circle-thin').attr('aria-hidden', true)
+            ),
+            $('<th/>').attr('data-sortable', true).attr('data-field', 'moyenne').attr('title', 'Moyenne').text('Moy.'),
+            $('<th/>').attr('data-sortable', true).attr('data-field', 'moyenne-reduite').attr('title', 'Moyenne réduite').text('M.Red'),
+            $('<th/>').attr('data-sortable', true).attr('data-field', 'moyenne-5-derniers-matchs').attr('title', 'Moyenne des 5 derniers matchs').text('M.5DM')
+        );
+
+        for (i = 0; i < listeJournees.length; i += 1) {
+            $ligneHead.append($('<th/>').attr('data-sortable', true).attr('data-field', 'J' + listeJournees[i]).text('J' + listeJournees[i]));
+        }
+        $('.page table thead').append($ligneHead);
+
+        // console.log(effectifs.teams, liste_notes);
+
+        for (i in listeNotes) {
+            if (listeNotes.hasOwnProperty(i)) {
+                var infosJoueur = getInfosJoueurs(joueurs, listeNotes[i].id);
+
+                if(infosJoueur !== undefined) {
+                    $ligne = $('<tr/>').append(
+                        $('<td/>').html('<strong>' + infosJoueur.prenom + ' ' + infosJoueur.nom + '</strong>'),
+                        $('<td/>').text(utils.postes[infosJoueur.poste]),
+                        $('<td/>').text(trouverEquipe(effectifs.teams, listeNotes[i].id) !== undefined ? (trouverEquipe(effectifs.teams, listeNotes[i].id))['nom'] : 'Libre'),
+                        $('<td/>').text(listeNotes[i].equipe),
+                        $('<td/>').text(listeNotes[i].buts),
+                        $('<td/>').text(listeNotes[i].passe_dec),
+                        $('<td/>').text(listeNotes[i].titulaires),
+                        $('<td/>').text(listeNotes[i].remplacants)
+                    );
+                    notes = listeNotes[i].notes;
+
+                    moyenne = Math.round(listeNotes[i].somme / notes.length * 100) / 100;
+                    var noteClass = utils.classNote(moyenne);
+                    $ligne.append($('<td/>').addClass(noteClass).text(moyenne));
+
+                    // Pour la moyenne réduite :
+                    listeNotes[i].tabNotes.sort(function compareNombres(a, b) {
+                        return a - b;
+                    });
+                    var coeff = listeNotes[i].tabNotes.length * 0.3;
+                    var nbrARetirer = Math.floor(coeff / 2) * 2;
+                    listeNotes[i].tabNotes.splice(0, nbrARetirer/2);
+                    listeNotes[i].tabNotes.splice(-nbrARetirer/2, nbrARetirer/2);
+                    var somme = listeNotes[i].tabNotes.reduce(function(a, b) {
+                        return a + b;
+                    }, 0);
+                    var moyenneRed = Math.round(somme / listeNotes[i].tabNotes.length * 100) / 100;
+                    var noteClass = utils.classNote(moyenneRed);
+                    var diff = moyenneRed - moyenne;
+                    $ligne.append($('<td/>').addClass(noteClass).text(moyenneRed + ' (' + diff.toFixed(2) + ')'));
+
+                    k = notes.length - 1;
+                    var tabNotes = [];
+                    for (j = listeJournees.length - 1; j >= 0; j--) {
+                        if (notes[k] !== undefined) {
+                            if (listeJournees[j] === notes[k].journee) {
+                                tabNotes.push(notes[k].note);
+                                if(tabNotes.length > 4) {
+                                    break;
+                                }
+                                k--;
+                            }
+                        }
+                    }
+                    var somme = tabNotes.reduce(function(a, b) {
+                        return a + b;
+                    }, 0);
+                    moyenne = Math.round(somme / tabNotes.length * 100) / 100;
+                    var noteClass = utils.classNote(moyenne);
+                    $ligne.append($('<td/>').addClass(noteClass).text(moyenne));
+
+                    k = 0;
+                    for (j = 0; j < listeJournees.length; j += 1) {
+                        if (notes[k] !== undefined) {
+                            if (listeJournees[j] === notes[k].journee) {
+                                var noteClass = utils.classNote(notes[k].note);
+
+                                if (notes[k].sub) {
+                                    $ligne.append($('<td/>').addClass(noteClass).append(
+                                        $('<span/>').text(notes[k].note),
+                                        $('<i/>').addClass('fa fa-caret-right').attr('aria-hidden', true)
+                                    ));
+                                } else {
+                                    $ligne.append($('<td/>').addClass(noteClass).text(notes[k].note));
+                                }
+                                k += 1;
+                            } else {
+                                $ligne.append($('<td/>').text('X'));
+                            }
+                        } else {
+                            $ligne.append($('<td/>').text('X'));
+                            k += 1;
+                        }
+                    }
+                    $('.page table tbody').append($ligne);
+                }
+            }
+        }
+
+        $('.page .modal .selectpicker').selectpicker('refresh');
+        $('.page table').bootstrapTable({
+            pagination: true,
+            search: true,
+            showColumns: true
+        });
+    }
+
+    var championnat = utils.getStorage('championnat').value,
+        league = utils.getStorage('league').value;
+
+    $.when(
+        api.getApiDerniereJournee(championnat),
+        api.getApiEffectif(league),
+        api.getApiListeCotes(championnat)
+    ).then(
+        (args1, args2, args3) => {
+            derniereJournee = (args1[0].matches[0].home.players.length > 0) ? args1[0].day : args1[0].day - 1;
+            effectifs = args2[0];
+            joueurs = args3[0];
+            
+            for(i = 1; i <= derniereJournee; i += 1) {
+                tabPromessesMatchParJournee.push({ championnat: championnat, day: i });
+            }
+            listePromessesMatchParJournee = tabPromessesMatchParJournee.map(api.getApiListeMatchParJournee);
+
+            $.when.apply($, listePromessesMatchParJournee).then(function(){
+                listeMatchsParJournee(arguments);
+            });
+        }
+    );
+}
+
+module.exports = {
+    getChampionnat: getChampionnat
+}
+});
+
 ;require.register("js/classement.js", function(exports, require, module) {
 "use strict";
 
-var api = require('js/api');
-    
+var api = require('js/api'),
+    utils = require('js/utils');
+
 var $page = $('.page'),
     classementTotal = {},
     user = 0,
@@ -396,93 +780,22 @@ var $page = $('.page'),
     equipe;
 
 function getClassements() {
-    $.when(api.getApiDashboard()).then(function(args){
-        for(l of args.data.leagues) {
-            tabPromessesLeagues.push(l.id);
-            nomLeagues.push(l.name);
-        }
-        listePromessesLeague = tabPromessesLeagues.map(api.getApiClassement);
-        
-        $.when.apply($, listePromessesLeague).then(function(){
-            for(p = 0; p < listePromessesLeague.length; ++p) {
-                $tableau = $('<div/>').addClass('classement').append(
-                    $('<h3/>').addClass('').text(nomLeagues[p]),
-                    $('<table/>').addClass('table').append(
-                        $('<thead/>').append(
-                            $('<tr/>').append(
-                                $('<th/>'),
-                                $('<th/>').addClass('equipe').text('Equipe'),
-                                $('<th/>').text('Série'),
-                                $('<th/>').text('J'),
-                                $('<th/>').text('G'),
-                                $('<th/>').text('N'),
-                                $('<th/>').text('P'),
-                                $('<th/>').text('Bp'),
-                                $('<th/>').text('Bc'),
-                                $('<th/>').text('Diff'),
-                                $('<th/>').text('Pts')
-                            )
-                        ),
-                        $('<tbody/>')
-                    )
-                );
-                classement = (arguments[p]) ? arguments[p][0].ranking : null,
-                clubs = (arguments[p]) ? arguments[p][0].teams : null;
-                
-                if(classement != null) {
-                    for (i = 0; i < classement.length; i += 1) {
-                        donnees = classement[i];
-                        $ligne = $('<tr/>');
+    for(l of utils.getStorage('ligues').value) {
+        tabPromessesLeagues.push(l.id);
+        nomLeagues.push(l.name);
+    }
+    listePromessesLeague = tabPromessesLeagues.map(api.getApiClassement);
 
-                        $ligne.append($('<td/>').text(donnees['rank']));
-                        $ligne.append($('<td/>').addClass('equipe').text(clubs[donnees['teamid']].name));
-                        $ligne.append($('<td/>').addClass('serie'));
-                        serie = donnees['series'].split("");
-                        for(s in serie) {
-                            $ligne.find('.serie').append($('<span/>').addClass(serie[s]));
-                        }
-                        $ligne.append($('<td/>').text(donnees['played']));
-                        $ligne.append($('<td/>').text(donnees['victory']));
-                        $ligne.append($('<td/>').text(donnees['draw']));
-                        $ligne.append($('<td/>').text(donnees['defeat']));
-                        $ligne.append($('<td/>').text(donnees['goal']));
-                        $ligne.append($('<td/>').text(donnees['goalconceded']));
-                        $ligne.append($('<td/>').text(donnees['difference']));
-                        $ligne.append($('<td/>').text(donnees['points']));
-                        
-                        user = donnees.teamid.split('_')[4];
-                        classementTotal[user] = {
-                            user: user,
-                            played: (classementTotal[user]) ? donnees.played + classementTotal[user].played : donnees.played,
-                            victory: (classementTotal[user]) ? donnees.victory + classementTotal[user].victory : donnees.victory,
-                            draw: (classementTotal[user]) ? donnees.draw + classementTotal[user].draw : donnees.draw,
-                            defeat: (classementTotal[user]) ? donnees.defeat + classementTotal[user].defeat : donnees.defeat,
-                            goal: (classementTotal[user]) ? donnees.goal + classementTotal[user].goal : donnees.goal,
-                            goalconceded: (classementTotal[user]) ? donnees.goalconceded + classementTotal[user].goalconceded : donnees.goalconceded,
-                            difference: (classementTotal[user]) ? donnees.difference + classementTotal[user].difference : donnees.difference,
-                            points: (classementTotal[user]) ? donnees.points + classementTotal[user].points : donnees.points
-                        }
-                        $tableau.find('tbody').append($ligne);
-                    }
-                }
-                if(p == 0)
-                    $page.html($tableau);
-                else
-                    $page.append($tableau);
-            }
-            $('.table').bootstrapTable();
-            classement = Object.values(classementTotal);
-            classement.sort(function (a, b) {
-                return b.points - a.points;
-            });
-            
+    $.when.apply($, listePromessesLeague).then(function(){
+        for(p = 0; p < listePromessesLeague.length; ++p) {
             $tableau = $('<div/>').addClass('classement').append(
-                $('<h3/>').addClass('').text('Classement général'),
+                $('<h3/>').addClass('').text(nomLeagues[p]),
                 $('<table/>').addClass('table').append(
                     $('<thead/>').append(
                         $('<tr/>').append(
                             $('<th/>'),
                             $('<th/>').addClass('equipe').text('Equipe'),
+                            $('<th/>').text('Série'),
                             $('<th/>').text('J'),
                             $('<th/>').text('G'),
                             $('<th/>').text('N'),
@@ -496,30 +809,101 @@ function getClassements() {
                     $('<tbody/>')
                 )
             );
-            j = 1;
-            for (i in classement) {
-                donnees = classement[i];
-                $ligne = $('<tr/>');
-                
-                for (equipe in donnees) {                            
-                    if (donnees.hasOwnProperty(equipe)) {
-                        if(equipe === 'user') {
-                            user = donnees.user;
-                            $ligne.prepend($('<td/>').text(j));
-                            $ligne.append($('<td/>').addClass('equipe user_' + user));
-                            $.when(api.getApiBadge(user)).then(function(args){
-                                $('.user_' + this.url.split('/')[5]).text(args.firstname);
-                            });
-                        } else
-                            $ligne.append($('<td/>').text(donnees[equipe]));
+            classement = (arguments[p]) ? arguments[p][0].ranking : null,
+                clubs = (arguments[p]) ? arguments[p][0].teams : null;
+
+            if(classement != null) {
+                for (i = 0; i < classement.length; i += 1) {
+                    donnees = classement[i];
+                    $ligne = $('<tr/>');
+
+                    $ligne.append($('<td/>').text(donnees['rank']));
+                    $ligne.append($('<td/>').addClass('equipe').text(clubs[donnees['teamid']].name));
+                    $ligne.append($('<td/>').addClass('serie'));
+                    serie = donnees['series'].split("");
+                    for(s in serie) {
+                        $ligne.find('.serie').append($('<span/>').addClass(serie[s]));
                     }
+                    $ligne.append($('<td/>').text(donnees['played']));
+                    $ligne.append($('<td/>').text(donnees['victory']));
+                    $ligne.append($('<td/>').text(donnees['draw']));
+                    $ligne.append($('<td/>').text(donnees['defeat']));
+                    $ligne.append($('<td/>').text(donnees['goal']));
+                    $ligne.append($('<td/>').text(donnees['goalconceded']));
+                    $ligne.append($('<td/>').text(donnees['difference']));
+                    $ligne.append($('<td/>').text(donnees['points']));
+
+                    user = donnees.teamid.split('_')[4];
+                    classementTotal[user] = {
+                        user: user,
+                        played: (classementTotal[user]) ? donnees.played + classementTotal[user].played : donnees.played,
+                        victory: (classementTotal[user]) ? donnees.victory + classementTotal[user].victory : donnees.victory,
+                        draw: (classementTotal[user]) ? donnees.draw + classementTotal[user].draw : donnees.draw,
+                        defeat: (classementTotal[user]) ? donnees.defeat + classementTotal[user].defeat : donnees.defeat,
+                        goal: (classementTotal[user]) ? donnees.goal + classementTotal[user].goal : donnees.goal,
+                        goalconceded: (classementTotal[user]) ? donnees.goalconceded + classementTotal[user].goalconceded : donnees.goalconceded,
+                        difference: (classementTotal[user]) ? donnees.difference + classementTotal[user].difference : donnees.difference,
+                        points: (classementTotal[user]) ? donnees.points + classementTotal[user].points : donnees.points
+                    }
+                    $tableau.find('tbody').append($ligne);
                 }
-                j++;
-                $tableau.find('tbody').append($ligne);
             }
-            
-            $page.prepend($tableau);
+            if(p == 0)
+                $page.html($tableau);
+            else
+                $page.append($tableau);
+        }
+        $('.table').bootstrapTable();
+        classement = Object.values(classementTotal);
+        classement.sort(function (a, b) {
+            return b.points - a.points;
         });
+
+        $tableau = $('<div/>').addClass('classement').append(
+            $('<h3/>').addClass('').text('Classement général'),
+            $('<table/>').addClass('table').append(
+                $('<thead/>').append(
+                    $('<tr/>').append(
+                        $('<th/>'),
+                        $('<th/>').addClass('equipe').text('Equipe'),
+                        $('<th/>').text('J'),
+                        $('<th/>').text('G'),
+                        $('<th/>').text('N'),
+                        $('<th/>').text('P'),
+                        $('<th/>').text('Bp'),
+                        $('<th/>').text('Bc'),
+                        $('<th/>').text('Diff'),
+                        $('<th/>').text('Pts')
+                    )
+                ),
+                $('<tbody/>')
+            )
+        );
+        j = 1;
+        for (i in classement) {
+            donnees = classement[i];
+            $ligne = $('<tr/>');
+
+            for (equipe in donnees) {                            
+                if (donnees.hasOwnProperty(equipe)) {
+                    if(equipe === 'user') {
+                        user = donnees.user;
+                        $ligne.prepend($('<td/>').text(j));
+                        $ligne.append($('<td/>').addClass('equipe user_' + user));
+                        $.when(api.getApiBadge(user)).then(function(args){
+                            $('.user_' + this.url.split('/')[5]).text(args.firstname);
+                        });
+                    } else
+                        $ligne.append($('<td/>').text(donnees[equipe]));
+                }
+            }
+            j++;
+            $tableau.find('tbody').append($ligne);
+        }
+
+        $page.prepend($tableau);
+    }).error(function(error) {
+        console.error(error);
     });
 }
 
@@ -552,7 +936,7 @@ function loadPageEffectifs(effectifs) {
     equipes = effectifs.teams,
     
     $('.page').html(
-        $('<table/>').addClass('table').attr('data-sort-name', 'joueur').attr('data-toggle', 'table').append(
+        $('<table/>').addClass('table').attr('data-sort-name', 'joueur').attr('data-toggle', 'table').attr('data-page-size', '50').append(
             $('<thead/>').append(
                 $('<tr/>').append(
                     $('<th/>').attr('data-sortable', true).attr('data-field', 'joueur').text('Joueur'),
@@ -592,10 +976,13 @@ function loadPageEffectifs(effectifs) {
 }
 
 function getEffectifs() {
+    var championnat = 1,
+        league = "pVArFY4W1nn";
+    
     if(utils.getStorage('effectifs') != null) {
         loadPageEffectifs(utils.getStorage('effectifs').value);
     } else {
-        $.when(api.getApiEffectifs()).then(function(args){
+        $.when(api.getApiEffectifs(league)).then(function(args){
             utils.setStorage('effectifs', args);
             loadPageEffectifs(args);
         });
@@ -2493,9 +2880,11 @@ function loadBudgetParEquipe(equipes, budgets) {
 }
 
 function getStatistiques() {
+    var championnat = 1,
+        league = "pVArFY4W1nn";
     now = new Date();
     
-    if(
+    /*if(
         utils.isStorage('effectifs') && 
         utils.isStorage('transfertsHistorique') && 
         utils.isStorage('listeCotes')
@@ -2505,18 +2894,18 @@ function getStatistiques() {
             utils.getStorage('transfertsHistorique').value,
             utils.getStorage('transfertsHistorique').value
         );
-    } else {
+    } else {*/
         $.when(
-            api.getApiEffectifs(),
-            api.getApiTransfertsHistorique(), 
-            api.getApiListeCotes()
+            api.getApiEffectif(league),
+            api.getApiTransfertsHistorique(league), 
+            api.getApiListeCotes(championnat)
         ).then(function(args1, args2, args3){
-            utils.setStorage('effectifs', args1[0]);
+            /*utils.setStorage('effectifs', args1[0]);
             utils.setStorage('transfertsHistorique', args2[0]);
-            utils.setStorage('listeCotes', args3[0]);
+            utils.setStorage('listeCotes', args3[0]);*/
             loadPageStatistiques(args1[0].teams, args2[0].teams, args3[0]);
         });
-    }
+    // }
 }
 
 module.exports = {

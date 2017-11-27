@@ -68,6 +68,22 @@ header {
         background-color: #ffffff; }
         header nav.navbar-default .navbar-toggle:hover .icon-bar, header nav.navbar-default .navbar-toggle:focus .icon-bar {
           background-color: #45C945; }
+    header nav.navbar-default .pull-right li.dropdown.open {
+      background-color: transparent; }
+    header nav.navbar-default .pull-right li.dropdown a {
+      background-color: transparent;
+      color: #ffffff;
+      padding: 15px 10px; }
+    header nav.navbar-default .pull-right li.dropdown .dropdown-menu {
+      background-color: #45C945;
+      min-width: 180px; }
+      header nav.navbar-default .pull-right li.dropdown .dropdown-menu li a {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis; }
+        header nav.navbar-default .pull-right li.dropdown .dropdown-menu li a img {
+          width: 30px;
+          margin-right: 5px; }
 
 .classement {
   margin: 30px 0; }

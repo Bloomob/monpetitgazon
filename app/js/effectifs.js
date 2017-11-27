@@ -21,7 +21,7 @@ function loadPageEffectifs(effectifs) {
     equipes = effectifs.teams,
     
     $('.page').html(
-        $('<table/>').addClass('table').attr('data-sort-name', 'joueur').attr('data-toggle', 'table').append(
+        $('<table/>').addClass('table').attr('data-sort-name', 'joueur').attr('data-toggle', 'table').attr('data-page-size', '50').append(
             $('<thead/>').append(
                 $('<tr/>').append(
                     $('<th/>').attr('data-sortable', true).attr('data-field', 'joueur').text('Joueur'),
@@ -61,10 +61,13 @@ function loadPageEffectifs(effectifs) {
 }
 
 function getEffectifs() {
+    var championnat = 1,
+        league = "pVArFY4W1nn";
+    
     if(utils.getStorage('effectifs') != null) {
         loadPageEffectifs(utils.getStorage('effectifs').value);
     } else {
-        $.when(api.getApiEffectifs()).then(function(args){
+        $.when(api.getApiEffectifs(league)).then(function(args){
             utils.setStorage('effectifs', args);
             loadPageEffectifs(args);
         });

@@ -141,9 +141,11 @@ function loadBudgetParEquipe(equipes, budgets) {
 }
 
 function getStatistiques() {
+    var championnat = 1,
+        league = "pVArFY4W1nn";
     now = new Date();
     
-    if(
+    /*if(
         utils.isStorage('effectifs') && 
         utils.isStorage('transfertsHistorique') && 
         utils.isStorage('listeCotes')
@@ -153,18 +155,18 @@ function getStatistiques() {
             utils.getStorage('transfertsHistorique').value,
             utils.getStorage('transfertsHistorique').value
         );
-    } else {
+    } else {*/
         $.when(
-            api.getApiEffectifs(),
-            api.getApiTransfertsHistorique(), 
-            api.getApiListeCotes()
+            api.getApiEffectif(league),
+            api.getApiTransfertsHistorique(league), 
+            api.getApiListeCotes(championnat)
         ).then(function(args1, args2, args3){
-            utils.setStorage('effectifs', args1[0]);
+            /*utils.setStorage('effectifs', args1[0]);
             utils.setStorage('transfertsHistorique', args2[0]);
-            utils.setStorage('listeCotes', args3[0]);
+            utils.setStorage('listeCotes', args3[0]);*/
             loadPageStatistiques(args1[0].teams, args2[0].teams, args3[0]);
         });
-    }
+    // }
 }
 
 module.exports = {
